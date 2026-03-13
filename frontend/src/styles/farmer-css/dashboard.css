@@ -1,9 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+
 /* ============================================
    DASHBOARD PAGE - SmartVegies Vendor Portal
    Unique namespace: svd__* (sv-dashboard)
    ============================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
 /* ---- Root Layout ---- */
 .svd__layout {
