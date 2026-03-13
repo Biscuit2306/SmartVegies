@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import "../../styles/farmer-css/dashboard.css";
+import VoiceTranscriber from "../../components/VoiceTranscriber";
+
 
 // ── Static Data ──────────────────────────────────────────────
 const STATS = [
@@ -188,14 +191,45 @@ function SalesChart() {
   );
 }
 
+// ── Weather FAB Component ────────────────────────────────────
+function WeatherFAB({ onClick }) {
+  return (
+    <button
+      className="svd__weather-fab"
+      onClick={onClick}
+      title="Weather Alerts"
+      aria-label="Open Weather Alerts"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 0 1 0 9Z" />
+      </svg>
+      <span className="svd__fab-badge" aria-hidden="true" />
+    </button>
+  );
+}
+
 // ── Main Dashboard Component ─────────────────────────────────
 const Dashboard = () => {
   const [searchVal, setSearchVal] = useState("");
   const [restockClicked, setRestockClicked] = useState(false);
+  const navigate = useNavigate();
 
   const handleRestock = () => {
     setRestockClicked(true);
     setTimeout(() => setRestockClicked(false), 2000);
+  };
+
+  const handleWeatherFAB = () => {
+    navigate("/farmer/weather-alerts");
   };
 
   return (
@@ -363,7 +397,7 @@ const Dashboard = () => {
                 </svg>
               </button>
             </div>
-
+  <VoiceTranscriber />
             <table className="svd__orders-table">
               <thead>
                 <tr>
@@ -410,8 +444,12 @@ const Dashboard = () => {
 
         </main>
       </div>
+
+      {/* ── Weather Alerts Floating Action Button ── */}
+      <WeatherFAB onClick={handleWeatherFAB} />
     </div>
   );
 };
+
 
 export default Dashboard;

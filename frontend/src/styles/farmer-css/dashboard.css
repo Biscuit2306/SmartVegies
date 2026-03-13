@@ -843,3 +843,48 @@
     padding: 12px 16px;
   }
 }
+/* ── Weather FAB ─────────────────────────────────────── */
+.svd__weather-fab {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4a8e38, #2d6e20);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(74, 142, 56, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 999;
+}
+
+.svd__weather-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 28px rgba(74, 142, 56, 0.65);
+}
+
+.svd__weather-fab:active {
+  transform: scale(0.96);
+}
+
+/* Red alert dot */
+.svd__fab-badge {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 11px;
+  height: 11px;
+  background: #ff4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: svd-fab-pulse 2s infinite;
+}
+
+@keyframes svd-fab-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.25); }
+}

@@ -19,6 +19,7 @@ import Orders from "./pages/farmer/Orders";
 import BulkRequests from "./pages/farmer/BulkRequests";
 import Earnings from "./pages/farmer/Earnings";
 import Profile from "./pages/farmer/Profile";
+import WeatherAlerts from "./pages/farmer/weatherAlerts";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
         <Route path="/farmer/bulk-requests" element={<BulkRequests />} />
         <Route path="/farmer/earnings" element={<Earnings />} />
         <Route path="/farmer/profile" element={<Profile />} />
+        <Route path="/farmer/weather-alerts" element={<WeatherAlerts />} />
 
       </Routes>
     </Router>
