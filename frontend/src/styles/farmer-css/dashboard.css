@@ -1,9 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+
 /* ============================================
    DASHBOARD PAGE - SmartVegies Vendor Portal
    Unique namespace: svd__* (sv-dashboard)
    ============================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
 
 /* ---- Root Layout ---- */
 .svd__layout {
@@ -33,6 +33,7 @@
   top: 0;
   z-index: 100;
   gap: 16px;
+  overflow: visible;
 }
 
 .svd__search-wrap {
@@ -80,6 +81,10 @@
   gap: 16px;
 }
 
+.svd__notif-wrapper {
+  position: relative;
+}
+
 .svd__notif-btn {
   position: relative;
   width: 38px;
@@ -93,6 +98,7 @@
   justify-content: center;
   color: #4a5e44;
   transition: all 0.18s;
+  padding: 0;
 }
 
 .svd__notif-btn:hover {
@@ -101,7 +107,7 @@
   color: #4a8e38;
 }
 
-.svd__notif-dot {
+.svd__notif-btn .svd__notif-dot {
   position: absolute;
   top: 7px;
   right: 7px;
@@ -166,19 +172,25 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  background: linear-gradient(135deg, #1a3a1a 0%, #2d5a27 60%, #3a7a30 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 20px rgba(26, 58, 26, 0.18);
+  border-left: 4px solid #7dce6a;
 }
 
 .svd__header-text h1 {
   font-size: 26px;
   font-weight: 800;
-  color: #1a2e18;
+  color: #ffffff;
   margin: 0 0 4px;
   letter-spacing: -0.5px;
 }
 
 .svd__header-text p {
   font-size: 13.5px;
-  color: #7a9270;
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
   font-weight: 400;
 }
@@ -195,21 +207,21 @@
   align-items: center;
   gap: 7px;
   padding: 9px 16px;
-  border: 1.5px solid #d0dccb;
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
   border-radius: 10px;
-  background: white;
+  background: rgba(255, 255, 255, 0.12);
   font-family: 'Sora', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  color: #4a5e44;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.18s;
 }
 
 .svd__btn-outline:hover {
-  border-color: #4a8e38;
-  color: #4a8e38;
-  background: #f5fbf3;
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .svd__btn-outline svg {
@@ -224,19 +236,19 @@
   padding: 9px 18px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4a8e38 0%, #2d6622 100%);
+  background: #ffffff;
   font-family: 'Sora', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: white;
+  color: #1a3a1a;
   cursor: pointer;
   transition: all 0.18s;
-  box-shadow: 0 3px 10px rgba(74, 142, 56, 0.3);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
 .svd__btn-primary:hover {
-  background: linear-gradient(135deg, #3d7a2e 0%, #245219 100%);
-  box-shadow: 0 5px 16px rgba(74, 142, 56, 0.4);
+  background: #f0f7ee;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
 
@@ -444,6 +456,11 @@
 .svd__chart-area svg {
   width: 100%;
   height: 100%;
+  overflow: visible;
+}
+
+.svd__chart-hover-area {
+  cursor: crosshair;
 }
 
 .svd__chart-days {
@@ -787,6 +804,409 @@
 .svd__order-action-btn svg {
   width: 14px;
   height: 14px;
+}
+
+/* ---- Form ---- */
+.svd__form-quantity-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.svd__form-unit-select {
+  max-width: 100px;
+}
+
+/* ---- Dropdowns ---- */
+.svd__dropdown-wrapper {
+  position: relative;
+}
+
+.svd__dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 10;
+  min-width: 150px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.svd__dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: #3a4e38;
+  transition: background 0.15s;
+}
+
+.svd__dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.svd__dropdown-item:hover {
+  background: #f5fbf3;
+}
+
+/* ---- Modal ---- */
+.svd__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.svd__modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.svd__modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a2e18;
+  margin-bottom: 20px;
+}
+
+.svd__modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.svd__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.svd__form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5e44;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.svd__form-input,
+.svd__form-textarea,
+.svd__form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: #3a4e38;
+  background: white;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.svd__form-input:focus,
+.svd__form-textarea:focus,
+.svd__form-select:focus {
+  border-color: #4a8e38;
+  box-shadow: 0 0 0 3px rgba(74, 142, 56, 0.1);
+}
+
+.svd__form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.svd__modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.svd__btn-cancel {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5e44;
+  transition: all 0.15s;
+}
+
+.svd__btn-cancel:hover {
+  border-color: #4a8e38;
+  background: #f5fbf3;
+}
+
+.svd__btn-submit {
+  padding: 10px 20px;
+  border-radius: 6px;
+  background: #4a8e38;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+
+.svd__btn-submit:hover {
+  background: #2d5a27;
+}
+
+/* ---- Notifications Panel ---- */
+.svd__notif-wrapper {
+  position: relative;
+}
+
+.svd__notif-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 9999;
+  min-width: 280px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 10px;
+}
+
+.svd__notif-panel-header {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  font-size: 13px;
+  color: #1a2e18;
+}
+
+.svd__notif-panel-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.svd__notif-item {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 13px;
+  color: #3a4e38;
+  transition: background 0.15s;
+}
+
+.svd__notif-item:last-child {
+  border-bottom: none;
+}
+
+.svd__notif-item:hover {
+  background: #f5fbf3;
+}
+
+.svd__notif-panel-footer {
+  padding: 10px 15px;
+  text-align: center;
+  border-top: 1px solid #eee;
+}
+
+.svd__notif-mark-read {
+  background: transparent;
+  border: none;
+  color: #4a8e38;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: 'Sora', sans-serif;
+  transition: color 0.15s;
+}
+
+.svd__notif-mark-read:hover {
+  color: #2d5a27;
+}
+
+/* ---- Toggle Buttons ---- */
+.svd__stock-toggle,
+.svd__orders-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #4a8e38;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.svd__stock-toggle:hover,
+.svd__orders-toggle:hover {
+  color: #2d5a27;
+}
+
+.svd__stock-toggle svg,
+.svd__orders-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- Period Filter Dropdown ---- */
+.svd__period-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  z-index: 10;
+  min-width: 150px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.svd__period-item {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: #3a4e38;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.svd__period-item:last-child {
+  border-bottom: none;
+}
+
+.svd__period-item:hover {
+  background: #f5fbf3;
+}
+
+/* ---- Modal Header & Body ---- */
+.svd__modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e8ede7;
+}
+
+.svd__modal-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a2e18;
+  margin: 0;
+}
+
+.svd__modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9aaa97;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.svd__modal-close:hover {
+  color: #4a5e44;
+}
+
+.svd__modal-body {
+  margin-bottom: 20px;
+}
+
+.svd__detail-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f5ee;
+  font-size: 13px;
+  color: #3a4e38;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.svd__detail-row:last-child {
+  border-bottom: none;
+}
+
+.svd__detail-row strong {
+  color: #1a2e18;
+  font-weight: 600;
+}
+
+/* ---- Action Menu ---- */
+.svd__action-cell {
+  position: relative;
+}
+
+.svd__action-menu {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  z-index: 10;
+  min-width: 140px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.svd__action-item {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: #3a4e38;
+  transition: background 0.15s;
+}
+
+.svd__action-item:last-child {
+  border-bottom: none;
+}
+
+.svd__action-item:hover {
+  background: #f5fbf3;
 }
 
 /* ---- Animations ---- */

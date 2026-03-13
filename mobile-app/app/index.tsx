@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import {
   StyleSheet,
   View,
@@ -39,7 +40,10 @@ const Navbar = () => (
   </SafeAreaView>
 );
 
-const Hero = () => (
+const Hero = () => {
+  const router = useRouter();
+  
+  return (
   <View style={styles.heroSection}>
     <View style={styles.heroContent}>
       <Text style={styles.overline}>DIRECT FROM LOCAL FARMS</Text>
@@ -54,11 +58,11 @@ const Hero = () => (
       </Text>
 
       <View style={styles.buttonGroup}>
-        <TouchableOpacity style={styles.primaryButton}>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/LoginRegister')}>
           <Text style={styles.primaryButtonText}>Shop Fresh Now</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.secondaryButton}>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/LoginRegister')}>
           <Text style={styles.secondaryButtonText}>Start Selling</Text>
         </TouchableOpacity>
       </View>
@@ -82,7 +86,8 @@ const Hero = () => (
       resizeMode="cover"
     />
   </View>
-);
+  );
+};
 
 const FeatureCard = ({ number, title, description, image }) => (
   <View style={styles.featureCard}>

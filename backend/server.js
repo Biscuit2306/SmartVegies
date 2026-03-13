@@ -43,6 +43,7 @@ app.get("/api/health", (req, res) => {
 // Auth Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/voice", voiceRoutes);
+app.use("/api/trace", require("./routes/traceRoutes"));
 
 
 /* -------------------- Server -------------------- */

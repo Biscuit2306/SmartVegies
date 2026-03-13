@@ -151,10 +151,10 @@ const INITIAL_REQUESTS = [
 ];
 
 const TABS = [
-  { key: "pending",    label: "Pending",    count: 4 },
-  { key: "negotiating",label: "Negotiating",count: 2 },
-  { key: "accepted",   label: "Accepted",   count: 12 },
-  { key: "completed",  label: "Completed",  count: null },
+  { key: "pending",     label: "Pending",     count: 4    },
+  { key: "negotiating", label: "Negotiating", count: 2    },
+  { key: "accepted",    label: "Accepted",    count: 12   },
+  { key: "completed",   label: "Completed",   count: null },
 ];
 
 // ── Toast Component ───────────────────────────────────────────
@@ -209,7 +209,6 @@ const NegotiateModal = ({ request, onClose, onSubmit }) => {
           Counter-offer to <strong>{request.requester}</strong> for {request.product}
         </p>
 
-        {/* Current terms summary */}
         <div className="svbr__modal-info-row">
           <div className="svbr__modal-info-item">
             <div className="svbr__modal-info-label">Their Quantity</div>
@@ -292,7 +291,6 @@ const RequestCard = ({ request, onNegotiate, onAccept }) => {
     <div className={`svbr__request-card ${isAccepted ? "svbr__request-card--accepted" : ""} ${isCompleted ? "svbr__request-card--completed" : ""}`}>
       {isAccepted && <div className="svbr__accepted-ribbon">Accepted</div>}
 
-      {/* Image */}
       <div className="svbr__card-img-wrap">
         <div className="svbr__card-img-emoji">{request.emoji}</div>
         {request.grade && (
@@ -300,7 +298,6 @@ const RequestCard = ({ request, onNegotiate, onAccept }) => {
         )}
       </div>
 
-      {/* Body */}
       <div className="svbr__card-body">
         <div className="svbr__card-top">
           <div className="svbr__card-top-left">
@@ -360,7 +357,7 @@ const RequestCard = ({ request, onNegotiate, onAccept }) => {
 
           {isCompleted && (
             <div className="svbr__card-actions">
-              <button className="svbr__btn-negotiate" style={{ cursor: "default", opacity: 0.5 }}>
+              <button className="svbr__btn-negotiate svbr__btn-negotiate--disabled">
                 Completed
               </button>
             </div>
@@ -373,11 +370,22 @@ const RequestCard = ({ request, onNegotiate, onAccept }) => {
 
 // ── Main BulkRequests Page ────────────────────────────────────
 const BulkRequests = () => {
-  const [requests, setRequests]     = useState(INITIAL_REQUESTS);
-  const [activeTab, setTab]         = useState("pending");
-  const [searchVal, setSearch]      = useState("");
-  const [negotiateTarget, setNego]  = useState(null);
-  const [toast, setToast]           = useState(null);
+  const [farmerName, setFarmerName] = useState(() => {
+    try { const p = JSON.parse(localStorage.getItem("sv_profile")); return p?.name || p?.farmerName || "GreenFarm Organics"; } catch { return "GreenFarm Organics"; }
+  });
+  useEffect(() => {
+    const sync = () => { try { const p = JSON.parse(localStorage.getItem("sv_profile")); setFarmerName(p?.name || p?.farmerName || "GreenFarm Organics"); } catch {} };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+  const farmerInitials = farmerName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const [requests, setRequests]         = useState(INITIAL_REQUESTS);
+  const [activeTab, setTab]             = useState("pending");
+  const [searchVal, setSearch]          = useState("");
+  const [negotiateTarget, setNego]      = useState(null);
+  const [toast, setToast]               = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const showToast = (message, type = "success") => setToast({ message, type });
 
@@ -421,61 +429,66 @@ const BulkRequests = () => {
 
   return (
     <div className="svbr__layout">
-      <Sidebar />
+      <Sidebar activePage="Bulk Requests" />
 
       <div className="svbr__main">
-        {/* Top Bar */}
+        {/* Top Bar — matches Dashboard navbar layout */}
         <header className="svbr__topbar">
-          <div className="svbr__topbar-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-              <line x1="12" y1="12" x2="12" y2="16" />
-              <line x1="10" y1="14" x2="14" y2="14" />
+          <div className="svbr__search-wrap">
+            <svg className="svbr__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span className="svbr__topbar-page-title">Bulk Purchase Requests</span>
+            <input
+              className="svbr__search-input"
+              type="text"
+              placeholder="Search orders, inventory, or reports..."
+              value={searchVal}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
           <div className="svbr__topbar-right">
-            <div className="svbr__search-wrap">
-              <svg className="svbr__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                className="svbr__search-input"
-                type="text"
-                placeholder="Search orders, inventory, or reports..."
-                value={searchVal}
-                onChange={(e) => { setSearch(e.target.value); }}
-              />
+            <div className="svbr__notif-wrapper">
+              <button className="svbr__notif-btn" title="Notifications" onClick={() => setShowNotifications(!showNotifications)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </svg>
+                <span className="svbr__notif-dot" />
+              </button>
+              {showNotifications && (
+                <div className="svbr__notif-panel">
+                  <div className="svbr__notif-panel-header">Notifications</div>
+                  <div className="svbr__notif-panel-body">
+                    <div className="svbr__notif-item">✓ Low stock alert for Organic Carrots</div>
+                    <div className="svbr__notif-item">💬 New order from Sarah Jenkins</div>
+                    <div className="svbr__notif-item">⚠️ Inventory review needed</div>
+                    <div className="svbr__notif-item">✅ Order #SV-9021 completed</div>
+                  </div>
+                  <div className="svbr__notif-panel-footer">
+                    <button onClick={() => setShowNotifications(false)} className="svbr__notif-mark-read">Mark all as read</button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            <button className="svbr__topbar-icon-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
-              <span className="svbr__notif-dot" />
-            </button>
 
             <div className="svbr__vendor-info">
               <div className="svbr__vendor-text">
-                <div className="svbr__vendor-name">GreenFarm Organics</div>
+                <div className="svbr__vendor-name">{farmerName}</div>
                 <div className="svbr__vendor-tier">Premium Vendor</div>
               </div>
-              <div className="svbr__vendor-avatar">GO</div>
+              <div className="svbr__vendor-avatar">{farmerInitials}</div>
             </div>
           </div>
         </header>
 
         <main className="svbr__content">
-          {/* Page Header */}
           <div className="svbr__header">
             <h1>Active Inquiries</h1>
             <p>Manage high-volume orders from restaurants and wholesalers.</p>
           </div>
 
-          {/* Tabs */}
           <div className="svbr__tabs-bar">
             {TABS.map((tab) => {
               const count = tabCounts[tab.key] ?? 0;
@@ -494,7 +507,6 @@ const BulkRequests = () => {
             })}
           </div>
 
-          {/* Cards */}
           <div className="svbr__cards-list">
             {filtered.length === 0 ? (
               <div className="svbr__empty">
@@ -518,7 +530,6 @@ const BulkRequests = () => {
         </main>
       </div>
 
-      {/* Negotiate Modal */}
       {negotiateTarget && (
         <NegotiateModal
           request={negotiateTarget}
@@ -527,7 +538,6 @@ const BulkRequests = () => {
         />
       )}
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast.message}

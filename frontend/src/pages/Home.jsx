@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/home.css";
 
@@ -245,6 +245,41 @@ const Footer = () => (
 export default function Home() {
   const navigate = useNavigate();
 
+  // 1. Load the Google Translate script when the component mounts
+  useEffect(() => {
+    window.googleTranslateElementInit = () => {
+      new window.google.translate.TranslateElement(
+        { pageLanguage: "en" },
+        "google_translate_element"
+      );
+    };
+
+    const scriptId = "google-translate-script";
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
+
+  // 2. Function to toggle the translation cookie
+  const toggleMarathi = () => {
+    const isMarathi = document.cookie.includes("googtrans=/en/mr");
+
+    if (isMarathi) {
+      document.cookie = "googtrans=/en/en; path=/";
+      document.cookie = "googtrans=/en/en; path=/; domain=" + window.location.hostname;
+    } else {
+      document.cookie = "googtrans=/en/mr; path=/";
+      document.cookie = "googtrans=/en/mr; path=/; domain=" + window.location.hostname;
+    }
+    
+    // Reload page to apply translation
+    window.location.reload();
+  };
+
   return (
     <div className="hm-app">
       <Navbar />
@@ -360,6 +395,14 @@ export default function Home() {
       </main>
 
       <Footer />
+
+      {/* 3. Floating Translate Button */}
+      {/* <button className="hm-floating-translate-btn" onClick={toggleMarathi}>
+        मराठी / English
+      </button> */}
+
+      {/* 4. Hidden Google Translate Element */}
+      <div id="google_translate_element" style={{ display: "none" }}></div>
     </div>
   );
 }

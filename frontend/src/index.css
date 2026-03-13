@@ -66,3 +66,49 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* ==========================================================================
+   CUSTOM TRANSLATE BUTTON & GOOGLE WIDGET HIDING
+   ========================================================================== */
+
+/* 1. Global Floating Translate Button (Smaller Size) */
+.global-translate-btn {
+  position: fixed;
+  left: 250px;           /* Closer to the left edge */
+  bottom: 20px;         /* Lowered towards the bottom */
+  background-color: #E77A14; /* Saffron/Orange color */
+  color: white;
+  border: none;
+  padding: 8px 14px;    /* REDUCED PADDING to make button smaller */
+  border-radius: 50px;  
+  cursor: pointer;
+  font-size: 13px;      /* REDUCED FONT SIZE */
+  font-weight: bold;
+  z-index: 9999;        
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.global-translate-btn:hover {
+  background-color: #c9650d;
+  transform: scale(1.05); 
+}
+
+/* 2. Hide Google Translate Default Widgets and Top Banner completely */
+.goog-te-banner-frame.skiptranslate, 
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+body {
+  top: 0px !important;
+}
+
+.goog-te-gadget {
+  display: none !important;
+  color: transparent !important;
+}
+
+iframe.skiptranslate {
+  display: none !important;
+}

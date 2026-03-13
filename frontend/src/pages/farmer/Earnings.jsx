@@ -80,7 +80,7 @@ function EarningsChart({ period }) {
             <circle cx={x} cy={ys[i]} r="4.5" fill="#4a8e38" stroke="white" strokeWidth="2" />
             <rect
               x={x - 22} y={0} width={44} height={H}
-              fill="transparent" style={{ cursor: "crosshair" }}
+              fill="transparent" className="sve__chart-hover-area"
               onMouseEnter={() => setTooltip({ i, x, y: ys[i] })}
               onMouseLeave={() => setTooltip(null)}
             />
@@ -104,11 +104,22 @@ function EarningsChart({ period }) {
 
 // ── Main Earnings Page ────────────────────────────────────────
 const Earnings = () => {
+  const [farmerName, setFarmerName] = useState(() => {
+    try { const p = JSON.parse(localStorage.getItem("sv_profile")); return p?.name || p?.farmerName || "GreenFarm Organics"; } catch { return "GreenFarm Organics"; }
+  });
+  useEffect(() => {
+    const sync = () => { try { const p = JSON.parse(localStorage.getItem("sv_profile")); setFarmerName(p?.name || p?.farmerName || "GreenFarm Organics"); } catch {} };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+  const farmerInitials = farmerName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
   const [period, setPeriod]         = useState("Last 6 Months");
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilter, setFilter]   = useState("All");
   const [page, setPage]             = useState(1);
   const [exportDone, setExport]     = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const filterRef = useRef(null);
 
   // Close filter dropdown on outside click
@@ -129,6 +140,25 @@ const Earnings = () => {
   const handleFilter = (f) => { setFilter(f); setPage(1); setFilterOpen(false); };
 
   const handleExport = () => {
+    const headers = ["Transaction ID", "Date", "Crop Type", "Quantity", "Amount", "Status"];
+    const rows = ALL_TRANSACTIONS.map((t) => [
+      t.id,
+      t.date,
+      t.crop,
+      t.qty,
+      `$${t.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      t.status.charAt(0).toUpperCase() + t.status.slice(1),
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "earnings-report.csv";
+    a.click();
+    URL.revokeObjectURL(url);
     setExport(true);
     setTimeout(() => setExport(false), 2200);
   };
@@ -137,34 +167,54 @@ const Earnings = () => {
 
   return (
     <div className="sve__layout">
-      <Sidebar />
+      <Sidebar activePage="Earnings" />
 
       <div className="sve__main">
         {/* Top Bar */}
         <header className="sve__topbar">
-          <div className="sve__topbar-left">
-            <button className="sve__topbar-search-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </button>
+          <div className="sve__search-wrap">
+            <svg className="sve__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              className="sve__search-input"
+              type="text"
+              placeholder="Search orders, inventory, or reports..."
+            />
           </div>
 
           <div className="sve__topbar-right">
-            <button className="sve__topbar-icon-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
-              <span className="sve__notif-dot" />
-            </button>
+            <div className="sve__notif-wrapper">
+              <button className="sve__notif-btn" title="Notifications" onClick={() => setShowNotifications(!showNotifications)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </svg>
+                <span className="sve__notif-dot" />
+              </button>
+              {showNotifications && (
+                <div className="sve__notif-panel">
+                  <div className="sve__notif-panel-header">Notifications</div>
+                  <div className="sve__notif-panel-body">
+                    <div className="sve__notif-item">✓ Low stock alert for Organic Carrots</div>
+                    <div className="sve__notif-item">💬 New order from Sarah Jenkins</div>
+                    <div className="sve__notif-item">⚠️ Inventory review needed</div>
+                    <div className="sve__notif-item">✅ Order #SV-9021 completed</div>
+                  </div>
+                  <div className="sve__notif-panel-footer">
+                    <button onClick={() => setShowNotifications(false)} className="sve__notif-mark-read">Mark all as read</button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="sve__vendor-info">
               <div className="sve__vendor-text">
-                <div className="sve__vendor-name">GreenFarm Organics</div>
+                <div className="sve__vendor-name">{farmerName}</div>
                 <div className="sve__vendor-tier">Premium Vendor</div>
               </div>
-              <div className="sve__vendor-avatar">GO</div>
+              <div className="sve__vendor-avatar">{farmerInitials}</div>
             </div>
           </div>
         </header>

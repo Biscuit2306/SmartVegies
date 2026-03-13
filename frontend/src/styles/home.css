@@ -751,3 +751,87 @@
   color: var(--hm-slate-400);
   font-size: 12px;
 }
+
+/*traceability details page*/
+.trace-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+  background-color: #f4f9f4;
+  min-height: 100vh;
+}
+
+.trace-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+.trace-header {
+  color: #2d5a27;
+  border-bottom: 2px solid #e0eee0;
+  padding-bottom: 10px;
+}
+
+.verified-badge {
+  font-size: 0.5em;
+  background: #4caf50;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 20px;
+  vertical-align: middle;
+}
+
+.trace-details p {
+  margin: 10px 0;
+  font-size: 1.1em;
+}
+
+/* ─── Floating Translate Button ─────────────────────────────────────────────── */
+.hm-floating-translate-btn {
+  position: fixed;
+  left: 20px;           /* Places it on the left side */
+  bottom: 40px;         /* Distance from the bottom */
+  background-color: #E77A14; /* Saffron/Orange color */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 50px;  /* Pill shape */
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  z-index: 9999;        /* Keeps it above all other elements */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  font-family: inherit;
+}
+
+.hm-floating-translate-btn:hover {
+  background-color: #c9650d;
+  transform: scale(1.05); /* Slight pop effect on hover */
+}
+/* ─── Hide Google Translate Default Widgets ────────────────────────────────── */
+
+/* 1. Hide the top translation banner */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* 2. Prevent the page from shifting down when the hidden banner is active */
+body {
+  top: 0px !important;
+}
+
+/* 3. Hide the "Powered by Google" text and widget */
+.goog-te-gadget {
+  display: none !important;
+  color: transparent !important;
+}
+
+/* 4. Hide any stray iframes Google tries to inject */
+iframe.skiptranslate {
+  display: none !important;
+}
