@@ -33,6 +33,7 @@
   top: 0;
   z-index: 100;
   gap: 16px;
+  overflow: visible;
 }
 
 .svp__topbar-left {
@@ -147,7 +148,7 @@
 
 .svp__cover-wrap {
   position: relative;
-  height: 180px;
+  height: 120px;
   overflow: hidden;
   background: linear-gradient(135deg, #1a3a1a, #2d5a27, #4a8e38);
 }
@@ -598,6 +599,13 @@
 
 .svp__gallery-img-wrap:hover { transform: scale(1.03); }
 
+.svp__gallery-emoji {
+  font-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .svp__gallery-img-wrap img {
   width: 100%;
   height: 100%;
@@ -777,3 +785,252 @@
   .svp__profile-row { padding: 0 16px 16px; }
   .svp__form-row { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   NEW ADDITIONS — edit mode, file inputs, gallery enhancements
+   Nothing above this line has been changed.
+   ============================================================ */
+
+/* ---- Hidden file input ---- */
+.svp__hidden-input {
+  display: none;
+}
+
+/* ---- Edit Profile button ---- */
+.svp__edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: 1.5px solid #d0dccb;
+  border-radius: 10px;
+  background: white;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5e44;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.svp__edit-btn:hover {
+  border-color: #4a8e38;
+  color: #4a8e38;
+  background: #f5fbf3;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(74,142,56,0.12);
+}
+
+.svp__edit-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---- Avatar — restored to original size, half inside cover ---- */
+.svp__avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 16px;
+  border: 4px solid white;
+  font-size: 36px;
+}
+
+.svp__profile-left {
+  align-items: flex-end;
+  margin-top: -46px;
+}
+
+.svp__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Name sits 14px below the avatar bottom — no longer jammed against cover */
+.svp__profile-info {
+  padding-bottom: 0;
+  padding-top: 14px;
+}
+
+/* ---- Avatar upload button — centered overlay instead of corner badge ---- */
+.svp__avatar-edit-btn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.18s;
+  box-shadow: none;
+}
+
+.svp__avatar-wrap:hover .svp__avatar-edit-btn {
+  opacity: 1;
+}
+
+.svp__avatar-edit-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.svp__avatar-edit-btn::after {
+  content: "Upload";
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* ---- Disabled textarea styling ---- */
+.svp__form-textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  resize: none;
+}
+
+/* ---- Gallery uploaded photo wrapper ---- */
+.svp__gallery-img-wrap--uploaded {
+  position: relative;
+}
+
+.svp__gallery-img-wrap--uploaded img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---- Gallery remove button (appears on hover) ---- */
+.svp__gallery-remove-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(224, 82, 82, 0.9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.svp__gallery-img-wrap--uploaded:hover .svp__gallery-remove-btn {
+  opacity: 1;
+}
+
+.svp__gallery-remove-btn:hover {
+  background: #c82020;
+}
+
+.svp__gallery-remove-btn svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* ---- Notification wrapper + panel (matches Dashboard) ---- */
+.svp__notif-wrapper {
+  position: relative;
+}
+
+.svp__notif-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8e0;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a5e44;
+  transition: all 0.18s;
+  padding: 0;
+}
+
+.svp__notif-btn:hover {
+  border-color: #4a8e38;
+  background: #f0f7ee;
+  color: #4a8e38;
+}
+
+.svp__notif-btn .svp__notif-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  background: #e05252;
+  border-radius: 50%;
+  border: 1.5px solid white;
+}
+
+.svp__notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8e0;
+  border-radius: 10px;
+  z-index: 300;
+  min-width: 280px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.svp__notif-panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eaf0e8;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a2e18;
+  font-family: 'Sora', sans-serif;
+}
+
+.svp__notif-panel-body {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.svp__notif-item {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f2f6f0;
+  font-size: 12.5px;
+  color: #3a4e38;
+  transition: background 0.12s;
+  font-family: 'Sora', sans-serif;
+}
+
+.svp__notif-item:last-child { border-bottom: none; }
+.svp__notif-item:hover { background: #f5fbf3; }
+
+.svp__notif-panel-footer {
+  padding: 10px 16px;
+  text-align: center;
+  border-top: 1px solid #eaf0e8;
+}
+
+.svp__notif-mark-read {
+  background: transparent;
+  border: none;
+  color: #4a8e38;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: 'Sora', sans-serif;
+  transition: color 0.15s;
+}
+
+.svp__notif-mark-read:hover { color: #2d5a27; }

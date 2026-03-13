@@ -20,6 +20,9 @@ import BulkRequests from "./pages/farmer/BulkRequests";
 import Earnings from "./pages/farmer/Earnings";
 import Profile from "./pages/farmer/Profile";
 
+// Shared Context
+import { OrdersProvider } from "./Context/Orderscontext";
+
 function App() {
   return (
     <Router>
@@ -37,16 +40,22 @@ function App() {
         <Route path="/buyer/bulk-order" element={<Buyerbulkorder />} />
         <Route path="/buyer/profile" element={<BuyerProfile />} />
 
-
-
-
-        {/* Farmer Routes */}
-        <Route path="/farmer/dashboard" element={<Dashboard />} />
-        <Route path="/farmer/crops" element={<Mycrops />} />
-        <Route path="/farmer/orders" element={<Orders />} />
-        <Route path="/farmer/bulk-requests" element={<BulkRequests />} />
-        <Route path="/farmer/earnings" element={<Earnings />} />
-        <Route path="/farmer/profile" element={<Profile />} />
+        {/* Farmer Routes — all share the same OrdersProvider instance */}
+        <Route
+          path="/farmer/*"
+          element={
+            <OrdersProvider>
+              <Routes>
+                <Route path="dashboard"      element={<Dashboard />} />
+                <Route path="crops"          element={<Mycrops />} />
+                <Route path="orders"         element={<Orders />} />
+                <Route path="bulk-requests"  element={<BulkRequests />} />
+                <Route path="earnings"       element={<Earnings />} />
+                <Route path="profile"        element={<Profile />} />
+              </Routes>
+            </OrdersProvider>
+          }
+        />
 
       </Routes>
     </Router>

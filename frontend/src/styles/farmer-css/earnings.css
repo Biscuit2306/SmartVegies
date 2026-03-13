@@ -33,6 +33,7 @@
   top: 0;
   z-index: 100;
   gap: 16px;
+  overflow: visible;
 }
 
 .sve__topbar-left {
@@ -69,7 +70,12 @@
   gap: 12px;
 }
 
-.sve__topbar-icon-btn {
+.sve__notif-wrapper {
+  position: relative;
+}
+
+.sve__topbar-icon-btn,
+.sve__notif-btn {
   position: relative;
   width: 38px;
   height: 38px;
@@ -82,15 +88,17 @@
   justify-content: center;
   color: #4a5e44;
   transition: all 0.18s;
+  padding: 0;
 }
 
-.sve__topbar-icon-btn:hover {
+.sve__topbar-icon-btn:hover,
+.sve__notif-btn:hover {
   border-color: #4a8e38;
   background: #f0f7ee;
   color: #4a8e38;
 }
 
-.sve__notif-dot {
+.sve__notif-btn .sve__notif-dot {
   position: absolute;
   top: 7px; right: 7px;
   width: 7px; height: 7px;
@@ -151,19 +159,25 @@
   justify-content: space-between;
   gap: 16px;
   animation: sve-fade-up 0.35s ease both;
+  background: linear-gradient(135deg, #1a3a1a 0%, #2d5a27 60%, #3a7a30 100%);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 4px;
+  box-shadow: 0 4px 20px rgba(26, 58, 26, 0.18);
+  border-left: 4px solid #7dce6a;
 }
 
 .sve__page-header-text h1 {
   font-size: 26px;
   font-weight: 800;
-  color: #1a2e18;
+  color: #ffffff;
   margin: 0 0 4px;
   letter-spacing: -0.5px;
 }
 
 .sve__page-header-text p {
   font-size: 13.5px;
-  color: #7a9270;
+  color: rgba(255, 255, 255, 0.65);
   margin: 0;
 }
 
@@ -174,20 +188,20 @@
   padding: 11px 22px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #4a8e38 0%, #2d6622 100%);
+  background: #ffffff;
   font-family: 'Sora', sans-serif;
   font-size: 13.5px;
   font-weight: 700;
-  color: white;
+  color: #1a3a1a;
   cursor: pointer;
   transition: all 0.18s;
-  box-shadow: 0 4px 14px rgba(74,142,56,0.3);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
   flex-shrink: 0;
 }
 
 .sve__export-btn:hover {
-  background: linear-gradient(135deg, #3d7a2e 0%, #245219 100%);
-  box-shadow: 0 6px 20px rgba(74,142,56,0.4);
+  background: #f0f7ee;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   transform: translateY(-1px);
 }
 
@@ -343,6 +357,10 @@
 }
 
 .sve__chart-area svg { width: 100%; height: 100%; overflow: visible; }
+
+.sve__chart-hover-area {
+  cursor: crosshair;
+}
 
 .sve__chart-months {
   display: flex;
@@ -713,4 +731,139 @@
   .sve__content { padding: 18px 16px; }
   .sve__topbar  { padding: 12px 16px; }
   .sve__summary-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Earnings navbar additions — match Dashboard layout ── */
+
+/* Search left, fills space like Dashboard */
+.sve__topbar .sve__search-wrap {
+  flex: 1;
+  max-width: 420px;
+  position: relative;
+}
+
+.sve__search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: #9aaa97;
+  pointer-events: none;
+}
+
+.sve__search-input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  border: 1.5px solid #e2e8e0;
+  border-radius: 10px;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  color: #2c3e28;
+  background: #f8faf7;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.sve__search-input::placeholder { color: #aab8a7; }
+
+.sve__search-input:focus {
+  border-color: #4a8e38;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(74,142,56,0.1);
+}
+
+/* Notification button — matches svd__notif-btn */
+.sve__notif-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8e0;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a5e44;
+  transition: all 0.18s;
+}
+
+.sve__notif-btn:hover {
+  border-color: #4a8e38;
+  background: #f0f7ee;
+  color: #4a8e38;
+}
+
+/* Notification wrapper + panel */
+.sve__notif-wrapper {
+  position: relative;
+}
+
+.sve__notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8e0;
+  border-radius: 10px;
+  z-index: 9999;
+  min-width: 280px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.sve__notif-panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #eaf0e8;
+  font-weight: 700;
+  font-size: 13px;
+  color: #1a2e18;
+}
+
+.sve__notif-panel-body {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.sve__notif-item {
+  padding: 11px 16px;
+  border-bottom: 1px solid #f2f6f0;
+  font-size: 12.5px;
+  color: #3a4e38;
+  transition: background 0.12s;
+}
+
+.sve__notif-item:last-child { border-bottom: none; }
+.sve__notif-item:hover { background: #f5fbf3; }
+
+.sve__notif-panel-footer {
+  padding: 10px 16px;
+  text-align: center;
+  border-top: 1px solid #eaf0e8;
+}
+
+.sve__notif-mark-read {
+  background: transparent;
+  border: none;
+  color: #4a8e38;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: 'Sora', sans-serif;
+  transition: color 0.15s;
+}
+
+.sve__notif-mark-read:hover { color: #2d5a27; }
+
+/* Notification red dot */
+.sve__notif-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  background: #e05252;
+  border-radius: 50%;
+  border: 1.5px solid white;
 }

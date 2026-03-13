@@ -187,7 +187,6 @@ export default function MyOrders() {
             { id:"cart",         path:"/buyer/cart",        label:"Cart",         iconKeys:["cart"]   },
             { id:"myorders",     path:"/buyer/myorders",    label:"My Orders",    iconKeys:["orders"] },
             { id:"bulk",         path:"/buyer/bulk-order",        label:"Bulk Order",   iconKeys:["bulk"]   },
-            { id:"subscription", path:"/buyer/subscription",label:"Subscription", iconKeys:["sub"]    },
             { id:"profile",      path:"/buyer/profile",     label:"Profile",      iconKeys:["user"]   },
           ].map(({ id, path, label, iconKeys }) => (
             <button

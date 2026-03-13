@@ -1,23 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import Sidebar from "../../components/Sidebar";
 import "../../styles/farmer-css/orders.css";
+import { useOrders } from "../../Context/Orderscontext";
 
 // ── Static Data ───────────────────────────────────────────────
-const ALL_ORDERS = [
-  { id: "#ORD-94821", customer: "John Doe Market",    initials: "JD", items: "Organic Tomatoes (50kg), Basil (5kg)",          amount: 420.00,  status: "pending",    date: "Oct 24, 2023" },
-  { id: "#ORD-94820", customer: "Healthy Foods Co.",  initials: "HF", items: "Sweet Corn (200 Units)",                         amount: 650.50,  status: "processing", date: "Oct 23, 2023" },
-  { id: "#ORD-94819", customer: "Green Grocery",      initials: "GG", items: "Spinach (30kg), Carrots (100kg)",                amount: 890.00,  status: "shipped",    date: "Oct 22, 2023" },
-  { id: "#ORD-94818", customer: "Veggie Bistro",      initials: "VB", items: "Potatoes (250kg), Onions (100kg)",               amount: 1240.00, status: "shipped",    date: "Oct 20, 2023" },
-  { id: "#ORD-94817", customer: "Salad Nation",       initials: "SN", items: "Kale (15kg), Cucumber (40kg)",                   amount: 315.00,  status: "cancelled",  date: "Oct 19, 2023" },
-  { id: "#ORD-94816", customer: "Farm Fresh Ltd",     initials: "FF", items: "Broccoli (60kg), Zucchini (20kg)",               amount: 530.00,  status: "pending",    date: "Oct 18, 2023" },
-  { id: "#ORD-94815", customer: "Urban Harvest",      initials: "UH", items: "Cherry Tomatoes (80kg)",                         amount: 760.00,  status: "processing", date: "Oct 17, 2023" },
-  { id: "#ORD-94814", customer: "Root & Vine",        initials: "RV", items: "Beetroot (45kg), Sweet Potato (90kg)",           amount: 410.00,  status: "shipped",    date: "Oct 16, 2023" },
-  { id: "#ORD-94813", customer: "Green Table Co.",    initials: "GT", items: "Lettuce (25kg), Radish (10kg)",                  amount: 185.00,  status: "cancelled",  date: "Oct 15, 2023" },
-  { id: "#ORD-94812", customer: "Pepper & Co.",       initials: "PC", items: "Bell Peppers (70kg), Chilli (15kg)",             amount: 620.75,  status: "pending",    date: "Oct 14, 2023" },
-  { id: "#ORD-94811", customer: "Sunrise Foods",      initials: "SF", items: "Corn (150 Units), Peas (30kg)",                  amount: 870.00,  status: "shipped",    date: "Oct 13, 2023" },
-  { id: "#ORD-94810", customer: "Daily Greens",       initials: "DG", items: "Spinach (50kg), Kale (20kg)",                    amount: 340.50,  status: "processing", date: "Oct 12, 2023" },
-];
-
 const ROWS_PER_PAGE = 5;
 
 const STATUS_FILTERS = [
@@ -79,98 +65,6 @@ const BOTTOM_STATS = [
 const fmt = (n) => `$${n.toFixed(2)}`;
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-// ── Create Order Modal ─────────────────────────────────────────
-const CreateOrderModal = ({ onClose, onAdd }) => {
-  const [form, setForm] = useState({
-    customer: "", initials: "", items: "",
-    amount: "", status: "pending", date: "",
-  });
-
-  const handle = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-
-  const submit = () => {
-    if (!form.customer.trim() || !form.items.trim()) return;
-    const initials = form.initials.trim() ||
-      form.customer.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-    const dateStr = form.date
-      ? new Date(form.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    const nextId = `#ORD-${90000 + Math.floor(Math.random() * 9999)}`;
-    onAdd({ id: nextId, customer: form.customer, initials, items: form.items,
-            amount: parseFloat(form.amount) || 0, status: form.status, date: dateStr });
-    onClose();
-  };
-
-  return (
-    <div className="svo__modal-overlay" onClick={onClose}>
-      <div className="svo__modal" onClick={(e) => e.stopPropagation()}>
-        <div className="svo__modal-header">
-          <span className="svo__modal-title">Create New Order</span>
-          <button className="svo__modal-close" onClick={onClose}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="svo__modal-form">
-          <div className="svo__form-row">
-            <div className="svo__form-group">
-              <label className="svo__form-label">Customer Name *</label>
-              <input className="svo__form-input" name="customer" value={form.customer}
-                placeholder="e.g. John Doe Market" onChange={handle} />
-            </div>
-            <div className="svo__form-group">
-              <label className="svo__form-label">Initials (auto if blank)</label>
-              <input className="svo__form-input" name="initials" value={form.initials}
-                placeholder="e.g. JD" maxLength={2} onChange={handle} />
-            </div>
-          </div>
-
-          <div className="svo__form-group svo__form-group--full">
-            <label className="svo__form-label">Items *</label>
-            <textarea className="svo__form-textarea" name="items" value={form.items}
-              placeholder="e.g. Organic Tomatoes (50kg), Basil (5kg)" onChange={handle} />
-          </div>
-
-          <div className="svo__form-row">
-            <div className="svo__form-group">
-              <label className="svo__form-label">Total Amount ($)</label>
-              <input className="svo__form-input" name="amount" type="number" min="0"
-                value={form.amount} placeholder="0.00" onChange={handle} />
-            </div>
-            <div className="svo__form-group">
-              <label className="svo__form-label">Status</label>
-              <select className="svo__form-select" name="status" value={form.status} onChange={handle}>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="svo__form-group">
-            <label className="svo__form-label">Order Date</label>
-            <input className="svo__form-input" name="date" type="date"
-              value={form.date} onChange={handle} />
-          </div>
-        </div>
-
-        <div className="svo__modal-footer">
-          <button className="svo__btn-outline" onClick={onClose}>Cancel</button>
-          <button className="svo__btn-primary" onClick={submit}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Create Order
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ── Action Dropdown ────────────────────────────────────────────
 const ActionMenu = ({ orderId, onDelete, onStatusChange }) => {
   const [open, setOpen] = useState(false);
@@ -227,12 +121,24 @@ const ActionMenu = ({ orderId, onDelete, onStatusChange }) => {
 
 // ── Main Orders Page ───────────────────────────────────────────
 const Orders = () => {
-  const [orders, setOrders]         = useState(ALL_ORDERS);
-  const [statusFilter, setStatus]   = useState("all");
-  const [sortBy, setSort]           = useState("newest");
-  const [searchVal, setSearch]      = useState("");
-  const [page, setPage]             = useState(1);
-  const [showModal, setModal]       = useState(false);
+  // Shared orders from context — synced with Dashboard
+  const { orders, setOrders } = useOrders();
+
+  const [farmerName, setFarmerName] = useState(() => {
+    try { const p = JSON.parse(localStorage.getItem("sv_profile")); return p?.name || p?.farmerName || "GreenFarm Organics"; } catch { return "GreenFarm Organics"; }
+  });
+  useEffect(() => {
+    const sync = () => { try { const p = JSON.parse(localStorage.getItem("sv_profile")); setFarmerName(p?.name || p?.farmerName || "GreenFarm Organics"); } catch {} };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+  const farmerInitials = farmerName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const [statusFilter, setStatus]         = useState("all");
+  const [sortBy, setSort]                 = useState("newest");
+  const [searchVal, setSearch]            = useState("");
+  const [page, setPage]                   = useState(1);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Filter + sort
   const filtered = useMemo(() => {
@@ -242,89 +148,103 @@ const Orders = () => {
       list = list.filter((o) =>
         o.customer.toLowerCase().includes(searchVal.toLowerCase()) ||
         o.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        o.items.toLowerCase().includes(searchVal.toLowerCase())
+        (o.items || "").toLowerCase().includes(searchVal.toLowerCase())
       );
     if (sortBy === "newest")  list.sort((a, b) => new Date(b.date) - new Date(a.date));
     if (sortBy === "oldest")  list.sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (sortBy === "highest") list.sort((a, b) => b.amount - a.amount);
-    if (sortBy === "lowest")  list.sort((a, b) => a.amount - b.amount);
+    if (sortBy === "highest") list.sort((a, b) => (b.amount || 0) - (a.amount || 0));
+    if (sortBy === "lowest")  list.sort((a, b) => (a.amount || 0) - (b.amount || 0));
     return list;
   }, [orders, statusFilter, sortBy, searchVal]);
 
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
   const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
 
-  // Reset page when filter changes
   const handleFilter = (key) => { setStatus(key); setPage(1); };
   const handleSearch = (e)   => { setSearch(e.target.value); setPage(1); };
-
-  const handleAdd = (order) => {
-    setOrders((prev) => [order, ...prev]);
-    setPage(1);
-    setStatus("all");
-  };
 
   const handleDelete = (id) => setOrders((prev) => prev.filter((o) => o.id !== id));
 
   const handleStatusChange = (id, newStatus) =>
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, status: newStatus } : o));
 
-  // Page number buttons (max 3 shown)
+  const handleExportCSV = () => {
+    const headers = ["Order ID", "Customer", "Items", "Total Amount", "Status", "Date"];
+    const rows = orders.map((o) => [
+      o.id,
+      o.customer,
+      o.items || "",
+      o.amount != null ? `$${o.amount.toFixed(2)}` : (o.total || ""),
+      o.status,
+      o.date,
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "orders.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const pageNums = [];
   for (let i = 1; i <= Math.min(totalPages, 3); i++) pageNums.push(i);
 
   return (
     <div className="svo__layout">
-      <Sidebar />
+      <Sidebar activePage="Orders" />
 
       <div className="svo__main">
         {/* Top Bar */}
         <header className="svo__topbar">
-          <div className="svo__topbar-left">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 01-8 0" />
+          <div className="svo__search-wrap">
+            <svg className="svo__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <span className="svo__topbar-page-title">Order Management</span>
+            <input
+              className="svo__search-input"
+              type="text"
+              placeholder="Search orders, inventory, or reports..."
+              value={searchVal}
+              onChange={handleSearch}
+            />
           </div>
 
           <div className="svo__topbar-right">
-            <div className="svo__search-wrap">
-              <svg className="svo__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                className="svo__search-input"
-                type="text"
-                placeholder="Search orders..."
-                value={searchVal}
-                onChange={handleSearch}
-              />
+            <div className="svo__notif-wrapper">
+              <button className="svo__notif-btn" title="Notifications" onClick={() => setShowNotifications(!showNotifications)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </svg>
+                <span className="svo__notif-dot" />
+              </button>
+              {showNotifications && (
+                <div className="svo__notif-panel">
+                  <div className="svo__notif-panel-header">Notifications</div>
+                  <div className="svo__notif-panel-body">
+                    <div className="svo__notif-item">✓ Low stock alert for Organic Carrots</div>
+                    <div className="svo__notif-item">💬 New order from Sarah Jenkins</div>
+                    <div className="svo__notif-item">⚠️ Inventory review needed</div>
+                    <div className="svo__notif-item">✅ Order #SV-9021 completed</div>
+                  </div>
+                  <div className="svo__notif-panel-footer">
+                    <button onClick={() => setShowNotifications(false)} className="svo__notif-mark-read">Mark all as read</button>
+                  </div>
+                </div>
+              )}
             </div>
-
-            <button className="svo__topbar-icon-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
-              <span className="svo__notif-dot" />
-            </button>
-
-            <button className="svo__topbar-icon-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </button>
 
             <div className="svo__vendor-info">
               <div className="svo__vendor-text">
-                <div className="svo__vendor-name">GreenFarm Organics</div>
+                <div className="svo__vendor-name">{farmerName}</div>
                 <div className="svo__vendor-tier">Premium Vendor</div>
               </div>
-              <div className="svo__vendor-avatar">GO</div>
+              <div className="svo__vendor-avatar">{farmerInitials}</div>
             </div>
           </div>
         </header>
@@ -337,7 +257,7 @@ const Orders = () => {
               <p>Manage and track your agricultural produce sales.</p>
             </div>
             <div className="svo__header-actions">
-              <button className="svo__btn-outline">
+              <button className="svo__btn-outline" onClick={handleExportCSV}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
@@ -345,25 +265,12 @@ const Orders = () => {
                 </svg>
                 Export CSV
               </button>
-              <button className="svo__btn-primary" onClick={() => setModal(true)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Create New
-              </button>
             </div>
           </div>
 
           {/* Controls Bar */}
           <div className="svo__controls-bar">
             <div className="svo__controls-left">
-              <button className="svo__create-btn" onClick={() => setModal(true)}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Create New
-              </button>
-
               <div className="svo__status-filters">
                 {STATUS_FILTERS.map((f) => (
                   <button
@@ -380,11 +287,7 @@ const Orders = () => {
 
             <div className="svo__controls-right">
               <span className="svo__sort-label">Sort by:</span>
-              <select
-                className="svo__sort-select"
-                value={sortBy}
-                onChange={(e) => setSort(e.target.value)}
-              >
+              <select className="svo__sort-select" value={sortBy} onChange={(e) => setSort(e.target.value)}>
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="highest">Highest Amount</option>
@@ -428,8 +331,8 @@ const Orders = () => {
                           <span className="svo__customer-name">{order.customer}</span>
                         </div>
                       </td>
-                      <td><span className="svo__items-text">{order.items}</span></td>
-                      <td><span className="svo__amount">{fmt(order.amount)}</span></td>
+                      <td><span className="svo__items-text">{order.items || "—"}</span></td>
+                      <td><span className="svo__amount">{order.amount != null ? fmt(order.amount) : (order.total || "—")}</span></td>
                       <td>
                         <span className={`svo__status-badge svo__status-badge--${order.status}`}>
                           {cap(order.status)}
@@ -456,15 +359,7 @@ const Orders = () => {
                 {Math.min(page * ROWS_PER_PAGE, filtered.length)} of {filtered.length} orders
               </span>
               <div className="svo__pagination-right">
-                <button className="svo__page-btn" disabled={page === 1}
-                  onClick={() => setPage((p) => p - 1)}>Previous</button>
-
-                <button className="svo__pagination-create-btn" onClick={() => setModal(true)}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Create New
-                </button>
+                <button className="svo__page-btn" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</button>
 
                 {pageNums.map((n) => (
                   <button
@@ -476,8 +371,7 @@ const Orders = () => {
                   </button>
                 ))}
 
-                <button className="svo__page-btn" disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}>Next</button>
+                <button className="svo__page-btn" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Next</button>
               </div>
             </div>
           </div>
@@ -498,7 +392,6 @@ const Orders = () => {
         </main>
       </div>
 
-      {showModal && <CreateOrderModal onClose={() => setModal(false)} onAdd={handleAdd} />}
     </div>
   );
 };
