@@ -2,386 +2,386 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 
 const LANGUAGES = [
-  { code: "en", label: "English" },
-  { code: "hi", label: "Hindi" },
-  { code: "ur", label: "Urdu" },
-  { code: "pa", label: "Punjabi" },
-  { code: "mr", label: "Marathi" },
+    { code: "en", label: "English" },
+    { code: "hi", label: "Hindi" },
+    { code: "ur", label: "Urdu" },
+    { code: "pa", label: "Punjabi" },
+    { code: "mr", label: "Marathi" },
 ];
 
 const MAX_FILE_MB = 25;
 
 export default function VoiceTranscriber() {
-  const [mode, setMode] = useState("upload"); // "upload" | "record"
-  const [language, setLanguage] = useState("en");
-  const [file, setFile] = useState(null);
-  const [status, setStatus] = useState("idle"); // idle | recording | loading | done | error
-  const [transcript, setTranscript] = useState("");
-  const [meta, setMeta] = useState(null);
-  const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [recordingLevel, setRecordingLevel] = useState(0); // For audio visualization
+    const [mode, setMode] = useState("upload"); // "upload" | "record"
+    const [language, setLanguage] = useState("en");
+    const [file, setFile] = useState(null);
+    const [status, setStatus] = useState("idle"); // idle | recording | loading | done | error
+    const [transcript, setTranscript] = useState("");
+    const [meta, setMeta] = useState(null);
+    const [error, setError] = useState("");
+    const [copied, setCopied] = useState(false);
+    const [recordingLevel, setRecordingLevel] = useState(0); // For audio visualization
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const fileInputRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const analyzerRef = useRef(null);
-  const animationIdRef = useRef(null);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const fileInputRef = useRef(null);
+    const audioContextRef = useRef(null);
+    const analyzerRef = useRef(null);
+    const animationIdRef = useRef(null);
 
-  // ── File upload handler ────────────────────────────────────────────────────
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (!selected) return;
+    // ── File upload handler ────────────────────────────────────────────────────
+    const handleFileChange = (e) => {
+        const selected = e.target.files[0];
+        if (!selected) return;
 
-    if (selected.size > MAX_FILE_MB * 1024 * 1024) {
-      setError(`File too large. Maximum size is ${MAX_FILE_MB} MB.`);
-      return;
-    }
-    setFile(selected);
-    setError("");
-    setTranscript("");
-    setMeta(null);
-  };
+        if (selected.size > MAX_FILE_MB * 1024 * 1024) {
+            setError(`File too large. Maximum size is ${MAX_FILE_MB} MB.`);
+            return;
+        }
+        setFile(selected);
+        setError("");
+        setTranscript("");
+        setMeta(null);
+    };
 
-  // ── Recording handlers ─────────────────────────────────────────────────────
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = [];
-      
-      // Setup audio analysis for visualization
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const analyzer = audioContext.createAnalyser();
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyzer);
-      analyzer.fftSize = 2048;
-      
-      audioContextRef.current = audioContext;
-      analyzerRef.current = analyzer;
-      
-      // Start recording
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+    // ── Recording handlers ─────────────────────────────────────────────────────
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
 
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) audioChunksRef.current.push(e.data);
-      };
+            // Setup audio analysis for visualization
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const analyzer = audioContext.createAnalyser();
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyzer);
+            analyzer.fftSize = 2048;
 
-      recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        const recordedFile = new File([blob], `recording-${Date.now()}.webm`, {
-          type: "audio/webm",
-        });
-        setFile(recordedFile);
-        stream.getTracks().forEach((t) => t.stop());
-        
-        // Stop audio level visualization
+            audioContextRef.current = audioContext;
+            analyzerRef.current = analyzer;
+
+            // Start recording
+            const recorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunksRef.current.push(e.data);
+            };
+
+            recorder.onstop = () => {
+                const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+                const recordedFile = new File([blob], `recording-${Date.now()}.webm`, {
+                    type: "audio/webm",
+                });
+                setFile(recordedFile);
+                stream.getTracks().forEach((t) => t.stop());
+
+                // Stop audio level visualization
+                if (animationIdRef.current) {
+                    cancelAnimationFrame(animationIdRef.current);
+                }
+                setRecordingLevel(0);
+            };
+
+            mediaRecorderRef.current = recorder;
+            recorder.start();
+            setStatus("recording");
+            setError("");
+
+            // Update recording level visualization
+            const updateLevel = () => {
+                const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+                analyzer.getByteFrequencyData(dataArray);
+                const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+                setRecordingLevel(Math.min(100, (average / 255) * 100));
+                animationIdRef.current = requestAnimationFrame(updateLevel);
+            };
+            updateLevel();
+
+        } catch (err) {
+            console.error("[VoiceTranscriber] Microphone error:", err.message);
+            setError("Microphone access denied. Please allow microphone permissions.");
+        }
+    };
+
+    const stopRecording = () => {
+        mediaRecorderRef.current?.stop();
+        setStatus("idle");
         if (animationIdRef.current) {
-          cancelAnimationFrame(animationIdRef.current);
+            cancelAnimationFrame(animationIdRef.current);
         }
-        setRecordingLevel(0);
-      };
-
-      mediaRecorderRef.current = recorder;
-      recorder.start();
-      setStatus("recording");
-      setError("");
-      
-      // Update recording level visualization
-      const updateLevel = () => {
-        const dataArray = new Uint8Array(analyzer.frequencyBinCount);
-        analyzer.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        setRecordingLevel(Math.min(100, (average / 255) * 100));
-        animationIdRef.current = requestAnimationFrame(updateLevel);
-      };
-      updateLevel();
-      
-    } catch (err) {
-      console.error("[VoiceTranscriber] Microphone error:", err.message);
-      setError("Microphone access denied. Please allow microphone permissions.");
-    }
-  };
-
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
-    setStatus("idle");
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current);
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-  };
-
-  // ── Submit to API ──────────────────────────────────────────────────────────
-  const handleTranscribe = async () => {
-    if (!file) {
-      setError("Please select or record an audio file first.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("audio", file);
-    formData.append("language", language);
-
-    try {
-      setStatus("loading");
-      setError("");
-      setTranscript("");
-
-      console.log("[VoiceTranscriber] Sending POST request to /api/voice/transcribe");
-      console.log("[VoiceTranscriber] File:", file.name, "| Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
-
-      // Axios automatically handles FormData and sets correct Content-Type
-      const response = await axios.post(
-        "http://localhost:5000/api/voice/transcribe",
-        formData
-      );
-
-      console.log("[VoiceTranscriber] Response received:", response.status);
-
-      const { data } = response;
-      
-      if (!data?.data?.transcript) {
-        throw new Error("Invalid response format from server");
-      }
-
-      setTranscript(data.data.transcript);
-      setMeta({
-        confidence: data.data.confidence,
-        duration: data.data.duration,
-        wordCount: data.data.wordCount,
-      });
-      setStatus("done");
-      console.log("[VoiceTranscriber] Transcription complete");
-
-    } catch (err) {
-      console.error("[VoiceTranscriber] Error:", err.message);
-      console.error("[VoiceTranscriber] Response status:", err?.response?.status);
-      console.error("[VoiceTranscriber] Response data:", err?.response?.data);
-      
-      // Show full error details for debugging
-      console.log("[VoiceTranscriber] Full error object:", JSON.stringify({
-        message: err?.message,
-        status: err?.response?.status,
-        statusText: err?.response?.statusText,
-        data: err?.response?.data,
-      }, null, 2));
-
-      let errorMessage = "Transcription failed. Please try again.";
-      
-      // Provide specific error messages based on status code
-      if (err.response?.status === 422) {
-        // Empty transcript or no speech detected
-        errorMessage = err?.response?.data?.message || "No speech detected. Please record clear speech and try again.";
-        if (err?.response?.data?.hint) {
-          errorMessage += "\n\nTips: " + err?.response?.data?.hint;
+        if (audioContextRef.current) {
+            audioContextRef.current.close();
         }
-      } else if (err.response?.status === 400) {
-        errorMessage = "Invalid file. Please upload a valid audio file.";
-      } else if (err.response?.status === 500) {
-        errorMessage = "Server error. Please try again later.";
-      } else {
-        errorMessage = err?.response?.data?.message || err?.message || errorMessage;
-      }
-      
-      setError(errorMessage);
-      setStatus("error");
-    }
-  };
+    };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(transcript);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    // ── Submit to API ──────────────────────────────────────────────────────────
+    const handleTranscribe = async () => {
+        if (!file) {
+            setError("Please select or record an audio file first.");
+            return;
+        }
 
-  const handleReset = () => {
-    setFile(null);
-    setTranscript("");
-    setMeta(null);
-    setStatus("idle");
-    setError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+        const formData = new FormData();
+        formData.append("audio", file);
+        formData.append("language", language);
 
-  return (
-    <div className="voice-transcriber">
-      <div className="vt-header">
-        <span className="vt-icon">🎙️</span>
-        <div>
-          <h2 className="vt-title">Voice to Text</h2>
-          <p className="vt-subtitle">
-            Upload or record audio — get an accurate transcript instantly
-          </p>
-        </div>
-      </div>
+        try {
+            setStatus("loading");
+            setError("");
+            setTranscript("");
 
-      {/* Mode Toggle */}
-      <div className="vt-toggle">
-        <button
-          className={`vt-tab ${mode === "upload" ? "active" : ""}`}
-          onClick={() => { setMode("upload"); handleReset(); }}
-        >
-          📂 Upload File
-        </button>
-        <button
-          className={`vt-tab ${mode === "record" ? "active" : ""}`}
-          onClick={() => { setMode("record"); handleReset(); }}
-        >
-          🎤 Record Live
-        </button>
-      </div>
+            console.log("[VoiceTranscriber] Sending POST request to /api/voice/transcribe");
+            console.log("[VoiceTranscriber] File:", file.name, "| Size:", (file.size / 1024 / 1024).toFixed(2), "MB");
 
-      {/* Language Selector */}
-      <div className="vt-field">
-        <label className="vt-label">Language</label>
-        <select
-          className="vt-select"
-          value={language}
-          onChange={(e) => setLanguage(e.target.value)}
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>{l.label}</option>
-          ))}
-        </select>
-      </div>
+            // Axios automatically handles FormData and sets correct Content-Type
+            const response = await axios.post(
+                "http://localhost:5000/api/voice/transcribe",
+                formData
+            );
 
-      {/* Input Area */}
-      {mode === "upload" ? (
-        <div
-          className="vt-dropzone"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            hidden
-            onChange={handleFileChange}
-          />
-          {file ? (
-            <div className="vt-file-info">
-              <span className="vt-file-icon">🎵</span>
-              <span className="vt-file-name">{file.name}</span>
-              <span className="vt-file-size">
-                ({(file.size / (1024 * 1024)).toFixed(2)} MB)
-              </span>
-            </div>
-          ) : (
-            <div className="vt-dropzone-empty">
-              <span className="vt-dz-icon">⬆️</span>
-              <p>Click to choose an audio file</p>
-              <small>MP3, WAV, OGG, WebM, FLAC — max 25 MB</small>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="vt-recorder">
-          {status === "recording" ? (
-            <div>
-              <button className="vt-rec-btn stop" onClick={stopRecording}>
-                <span className="rec-dot" /> Stop Recording
-              </button>
-              <div className="vt-recording-level">
-                <p className="vt-level-label">Audio Level</p>
-                <div className="vt-level-bar-container">
-                  <div 
-                    className="vt-level-bar" 
-                    style={{ width: `${recordingLevel}%` }}
-                  />
+            console.log("[VoiceTranscriber] Response received:", response.status);
+
+            const { data } = response;
+
+            if (!data?.data?.transcript) {
+                throw new Error("Invalid response format from server");
+            }
+
+            setTranscript(data.data.transcript);
+            setMeta({
+                confidence: data.data.confidence,
+                duration: data.data.duration,
+                wordCount: data.data.wordCount,
+            });
+            setStatus("done");
+            console.log("[VoiceTranscriber] Transcription complete");
+
+        } catch (err) {
+            console.error("[VoiceTranscriber] Error:", err.message);
+            console.error("[VoiceTranscriber] Response status:", err?.response?.status);
+            console.error("[VoiceTranscriber] Response data:", err?.response?.data);
+
+            // Show full error details for debugging
+            console.log("[VoiceTranscriber] Full error object:", JSON.stringify({
+                message: err?.message,
+                status: err?.response?.status,
+                statusText: err?.response?.statusText,
+                data: err?.response?.data,
+            }, null, 2));
+
+            let errorMessage = "Transcription failed. Please try again.";
+
+            // Provide specific error messages based on status code
+            if (err.response?.status === 422) {
+                // Empty transcript or no speech detected
+                errorMessage = err?.response?.data?.message || "No speech detected. Please record clear speech and try again.";
+                if (err?.response?.data?.hint) {
+                    errorMessage += "\n\nTips: " + err?.response?.data?.hint;
+                }
+            } else if (err.response?.status === 400) {
+                errorMessage = "Invalid file. Please upload a valid audio file.";
+            } else if (err.response?.status === 500) {
+                errorMessage = "Server error. Please try again later.";
+            } else {
+                errorMessage = err?.response?.data?.message || err?.message || errorMessage;
+            }
+
+            setError(errorMessage);
+            setStatus("error");
+        }
+    };
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(transcript);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleReset = () => {
+        setFile(null);
+        setTranscript("");
+        setMeta(null);
+        setStatus("idle");
+        setError("");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    return (
+        <div className="voice-transcriber">
+            <div className="vt-header">
+                <span className="vt-icon">🎙️</span>
+                <div>
+                    <h2 className="vt-title">Voice to Text</h2>
+                    <p className="vt-subtitle">
+                        Upload or record audio — get an accurate transcript instantly
+                    </p>
                 </div>
-                <p className="vt-level-hint">
-                  {recordingLevel < 5 && "🔇 No sound detected - speak louder"}
-                  {recordingLevel >= 5 && recordingLevel < 30 && "🔉 Quiet - try speaking closer to microphone"}
-                  {recordingLevel >= 30 && "🔊 Good level - keep speaking!"}
-                </p>
-              </div>
             </div>
-          ) : (
+
+            {/* Mode Toggle */}
+            <div className="vt-toggle">
+                <button
+                    className={`vt-tab ${mode === "upload" ? "active" : ""}`}
+                    onClick={() => { setMode("upload"); handleReset(); }}
+                >
+                    📂 Upload File
+                </button>
+                <button
+                    className={`vt-tab ${mode === "record" ? "active" : ""}`}
+                    onClick={() => { setMode("record"); handleReset(); }}
+                >
+                    🎤 Record Live
+                </button>
+            </div>
+
+            {/* Language Selector */}
+            <div className="vt-field">
+                <label className="vt-label">Language</label>
+                <select
+                    className="vt-select"
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                >
+                    {LANGUAGES.map((l) => (
+                        <option key={l.code} value={l.code}>{l.label}</option>
+                    ))}
+                </select>
+            </div>
+
+            {/* Input Area */}
+            {mode === "upload" ? (
+                <div
+                    className="vt-dropzone"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="audio/*"
+                        hidden
+                        onChange={handleFileChange}
+                    />
+                    {file ? (
+                        <div className="vt-file-info">
+                            <span className="vt-file-icon">🎵</span>
+                            <span className="vt-file-name">{file.name}</span>
+                            <span className="vt-file-size">
+                                ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="vt-dropzone-empty">
+                            <span className="vt-dz-icon">⬆️</span>
+                            <p>Click to choose an audio file</p>
+                            <small>MP3, WAV, OGG, WebM, FLAC — max 25 MB</small>
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="vt-recorder">
+                    {status === "recording" ? (
+                        <div>
+                            <button className="vt-rec-btn stop" onClick={stopRecording}>
+                                <span className="rec-dot" /> Stop Recording
+                            </button>
+                            <div className="vt-recording-level">
+                                <p className="vt-level-label">Audio Level</p>
+                                <div className="vt-level-bar-container">
+                                    <div
+                                        className="vt-level-bar"
+                                        style={{ width: `${recordingLevel}%` }}
+                                    />
+                                </div>
+                                <p className="vt-level-hint">
+                                    {recordingLevel < 5 && "🔇 No sound detected - speak louder"}
+                                    {recordingLevel >= 5 && recordingLevel < 30 && "🔉 Quiet - try speaking closer to microphone"}
+                                    {recordingLevel >= 30 && "🔊 Good level - keep speaking!"}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            className="vt-rec-btn start"
+                            onClick={startRecording}
+                            disabled={status === "loading"}
+                        >
+                            🎤 Start Recording
+                        </button>
+                    )}
+                    {file && status !== "recording" && (
+                        <p className="vt-rec-ready">✅ Recording ready: {file.name}</p>
+                    )}
+                </div>
+            )}
+
+            {/* Error */}
+            {error && (
+                <div className="vt-error-container">
+                    <p className="vt-error">⚠️ {error}</p>
+                    {error.includes("No speech detected") && (
+                        <div className="vt-suggestions">
+                            <p><strong>Tips for better results:</strong></p>
+                            <ul>
+                                <li>Speak clearly and at a normal volume</li>
+                                <li>Minimize background noise</li>
+                                <li>Record at least 1-2 seconds of continuous speech</li>
+                                <li>Try using WAV or MP3 format instead of WebM</li>
+                                <li>Ensure selected language matches your speech</li>
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Submit */}
             <button
-              className="vt-rec-btn start"
-              onClick={startRecording}
-              disabled={status === "loading"}
+                className="vt-submit"
+                onClick={handleTranscribe}
+                disabled={!file || status === "loading" || status === "recording"}
             >
-              🎤 Start Recording
+                {status === "loading" ? (
+                    <><span className="spinner" /> Transcribing…</>
+                ) : (
+                    "Transcribe Audio"
+                )}
             </button>
-          )}
-          {file && status !== "recording" && (
-            <p className="vt-rec-ready">✅ Recording ready: {file.name}</p>
-          )}
-        </div>
-      )}
 
-      {/* Error */}
-      {error && (
-        <div className="vt-error-container">
-          <p className="vt-error">⚠️ {error}</p>
-          {error.includes("No speech detected") && (
-            <div className="vt-suggestions">
-              <p><strong>Tips for better results:</strong></p>
-              <ul>
-                <li>Speak clearly and at a normal volume</li>
-                <li>Minimize background noise</li>
-                <li>Record at least 1-2 seconds of continuous speech</li>
-                <li>Try using WAV or MP3 format instead of WebM</li>
-                <li>Ensure selected language matches your speech</li>
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+            {/* Result */}
+            {status === "done" && transcript && (
+                <div className="vt-result">
+                    <div className="vt-result-header">
+                        <span className="vt-result-title">📝 Transcript</span>
+                        <div className="vt-result-actions">
+                            <button className="vt-action-btn" onClick={handleCopy}>
+                                {copied ? "✅ Copied!" : "📋 Copy"}
+                            </button>
+                            <button className="vt-action-btn secondary" onClick={handleReset}>
+                                🔄 New
+                            </button>
+                        </div>
+                    </div>
 
-      {/* Submit */}
-      <button
-        className="vt-submit"
-        onClick={handleTranscribe}
-        disabled={!file || status === "loading" || status === "recording"}
-      >
-        {status === "loading" ? (
-          <><span className="spinner" /> Transcribing…</>
-        ) : (
-          "Transcribe Audio"
-        )}
-      </button>
+                    <div className="vt-transcript-box">{transcript}</div>
 
-      {/* Result */}
-      {status === "done" && transcript && (
-        <div className="vt-result">
-          <div className="vt-result-header">
-            <span className="vt-result-title">📝 Transcript</span>
-            <div className="vt-result-actions">
-              <button className="vt-action-btn" onClick={handleCopy}>
-                {copied ? "✅ Copied!" : "📋 Copy"}
-              </button>
-              <button className="vt-action-btn secondary" onClick={handleReset}>
-                🔄 New
-              </button>
-            </div>
-          </div>
+                    {meta && (
+                        <div className="vt-meta">
+                            {meta.confidence != null && (
+                                <span>Confidence: {(meta.confidence * 100).toFixed(1)}%</span>
+                            )}
+                            {meta.duration != null && (
+                                <span>Duration: {meta.duration.toFixed(1)}s</span>
+                            )}
+                            {meta.wordCount != null && (
+                                <span>Words: {meta.wordCount}</span>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
 
-          <div className="vt-transcript-box">{transcript}</div>
-
-          {meta && (
-            <div className="vt-meta">
-              {meta.confidence != null && (
-                <span>Confidence: {(meta.confidence * 100).toFixed(1)}%</span>
-              )}
-              {meta.duration != null && (
-                <span>Duration: {meta.duration.toFixed(1)}s</span>
-              )}
-              {meta.wordCount != null && (
-                <span>Words: {meta.wordCount}</span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      <style>{`
+            <style>{`
         .voice-transcriber {
           background: #fff;
           border-radius: 16px;
@@ -446,6 +446,6 @@ export default function VoiceTranscriber() {
         .vt-transcript-box { padding: 16px; font-size: 0.97rem; line-height: 1.7; color: #222; white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow-y: auto; }
         .vt-meta { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 16px; background: #f8faf8; border-top: 1px solid #e0ece0; font-size: 0.8rem; color: #666; }
       `}</style>
-    </div>
-  );
+        </div>
+    );
 }
