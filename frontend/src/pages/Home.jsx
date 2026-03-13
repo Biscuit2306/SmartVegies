@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/home.css";
 
 // ─── Inline SVG Icons ─────────────────────────────────────────────────────────
@@ -71,67 +72,87 @@ const MailIcon = () => (
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const Navbar = () => (
-  <header className="hm-navbar">
-    <div className="hm-navbar-brand">
-      <LeafIcon size={32} />
-      <h2>SmartVegies</h2>
-    </div>
-    <div className="hm-navbar-right">
-      <nav className="hm-navbar-links">
-        <a href="#how-it-works">How it Works</a>
-        <a href="#buyers">For Buyers</a>
-        <a href="#vendors">For Vendors</a>
-      </nav>
-      <div className="hm-navbar-btns">
-        <button className="hm-btn hm-btn-primary-sm">Shop Now</button>
-        <button className="hm-btn hm-btn-secondary-sm">Start Selling</button>
+const Navbar = () => {
+  const navigate = useNavigate();
+  return (
+    <header className="hm-navbar">
+      <div className="hm-navbar-brand">
+        <LeafIcon size={32} />
+        <h2>SmartVegies</h2>
       </div>
-    </div>
-    <div className="hm-navbar-menu-icon">
-      <MenuIcon />
-    </div>
-  </header>
-);
+      <div className="hm-navbar-right">
+        <nav className="hm-navbar-links">
+          <a href="#how-it-works">How it Works</a>
+          <a href="#buyers">For Buyers</a>
+          <a href="#vendors">For Vendors</a>
+        </nav>
+        <div className="hm-navbar-btns">
+          <button
+            className="hm-btn hm-btn-primary-sm"
+            onClick={() => navigate("/login")}
+          >
+            Shop Now
+          </button>
+        </div>
+      </div>
+      <div className="hm-navbar-menu-icon">
+        <MenuIcon />
+      </div>
+    </header>
+  );
+};
 
-const Hero = () => (
-  <section className="hm-hero">
-    <div className="hm-hero-inner">
-      <div className="hm-hero-text hm-hero-animate-left">
-        <div className="hm-hero-copy">
-          <span className="hm-eyebrow">Direct from local farms</span>
-          <h1 className="hm-hero-title">
-            Freshness Delivered from{" "}
-            <span className="hm-text-primary">Local Fields</span> to Your Table
-          </h1>
-          <p className="hm-hero-desc">
-            Connecting you with passionate local vendors for the highest quality
-            produce in your neighborhood. Sustainably sourced, carefully
-            delivered.
-          </p>
-        </div>
-        <div className="hm-hero-btns">
-          <button className="hm-btn hm-btn-hero-primary">Shop Fresh Now</button>
-          <button className="hm-btn hm-btn-hero-outline">Start Selling</button>
-        </div>
-        <div className="hm-hero-social">
-          <div className="hm-avatar-stack">
-            <div className="hm-avatar hm-avatar-light"></div>
-            <div className="hm-avatar hm-avatar-mid"></div>
-            <div className="hm-avatar hm-avatar-dark"></div>
+const Hero = () => {
+  const navigate = useNavigate();
+  return (
+    <section className="hm-hero">
+      <div className="hm-hero-inner">
+        <div className="hm-hero-text hm-hero-animate-left">
+          <div className="hm-hero-copy">
+            <span className="hm-eyebrow">Direct from local farms</span>
+            <h1 className="hm-hero-title">
+              Freshness Delivered from{" "}
+              <span className="hm-text-primary">Local Fields</span> to Your Table
+            </h1>
+            <p className="hm-hero-desc">
+              Connecting you with passionate local vendors for the highest quality
+              produce in your neighborhood. Sustainably sourced, carefully
+              delivered.
+            </p>
           </div>
-          <span>Joined by 2,000+ local foodies this month</span>
+          <div className="hm-hero-btns">
+            <button
+              className="hm-btn hm-btn-hero-primary"
+              onClick={() => navigate("/login")}
+            >
+              Shop Fresh Now
+            </button>
+            <button
+              className="hm-btn hm-btn-hero-outline"
+              onClick={() => navigate("/login")}
+            >
+              Start Selling
+            </button>
+          </div>
+          <div className="hm-hero-social">
+            <div className="hm-avatar-stack">
+              <div className="hm-avatar hm-avatar-light"></div>
+              <div className="hm-avatar hm-avatar-mid"></div>
+              <div className="hm-avatar hm-avatar-dark"></div>
+            </div>
+            <span>Joined by 2,000+ local foodies this month</span>
+          </div>
         </div>
+        <div
+          className="hm-hero-image hm-hero-animate-scale"
+          style={{
+            "--hm-hero-bg": 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBicm-SOYkeuB0QkTYSgoJ3hyuaZzQDQ6SWhg9vwfeOPfRJb3CCdmOHCzzx7uzIauShVp3WYs_iaV43i6PocPT8X4shoIIRJQaq5TgKtrjrBZ1ngfdAPUD9Ae44LgTwozUyZvDNY0NV5ptXqP2faheTyV-BTZaWMwbFO_Clvvaa9kXzYHSogsHIj7liFl3WnSeA8kodbkarLLENL8yKlFCbCUA7nwpowKtMgDVqPXQjTODKil0HUs96U235g3Dz-F9NEtLxZAXRhRs")',
+          }}
+        />
       </div>
-      <div
-        className="hm-hero-image hm-hero-animate-scale"
-        style={{
-          "--hm-hero-bg": 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDBicm-SOYkeuB0QkTYSgoJ3hyuaZzQDQ6SWhg9vwfeOPfRJb3CCdmOHCzzx7uzIauShVp3WYs_iaV43i6PocPT8X4shoIIRJQaq5TgKtrjrBZ1ngfdAPUD9Ae44LgTwozUyZvDNY0NV5ptXqP2faheTyV-BTZaWMwbFO_Clvvaa9kXzYHSogsHIj7liFl3WnSeA8kodbkarLLENL8yKlFCbCUA7nwpowKtMgDVqPXQjTODKil0HUs96U235g3Dz-F9NEtLxZAXRhRs")',
-        }}
-      />
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const FeatureCard = ({ number, title, description, image }) => (
   <div className="hm-feature-card">
@@ -222,6 +243,8 @@ const Footer = () => (
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const navigate = useNavigate();
+
   return (
     <div className="hm-app">
       <Navbar />
@@ -294,7 +317,12 @@ export default function Home() {
               />
             </div>
             <div className="hm-vendor-cta">
-              <button className="hm-btn hm-btn-vendor">Apply to Sell</button>
+              <button
+                className="hm-btn hm-btn-vendor"
+                onClick={() => navigate("/login")}
+              >
+                Apply to Sell
+              </button>
             </div>
           </div>
         </section>
@@ -313,8 +341,16 @@ export default function Home() {
                 grow your farm's reach, we've got you covered.
               </p>
               <div className="hm-cta-btns">
-                <button className="hm-btn hm-btn-cta-primary">Start Shopping</button>
-                <button className="hm-btn hm-btn-cta-outline">
+                <button
+                  className="hm-btn hm-btn-cta-primary"
+                  onClick={() => navigate("/login")}
+                >
+                  Start Shopping
+                </button>
+                <button
+                  className="hm-btn hm-btn-cta-outline"
+                  onClick={() => navigate("/login")}
+                >
                   Register as Vendor
                 </button>
               </div>
