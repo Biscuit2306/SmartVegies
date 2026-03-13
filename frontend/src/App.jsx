@@ -24,6 +24,9 @@ import FarmerPolicies from "./pages/farmer/FarmerPolicies"; // <-- New Policies 
 // Traceability Details
 import TraceabilityDetail from "./pages/TraceabilityDetail"; 
 
+// Shared Context
+import { OrdersProvider } from "./Context/Orderscontext";
+
 function App() {
 
   // 1. Load the Google Translate script globally when the App loads
@@ -85,16 +88,23 @@ function App() {
         <Route path="/buyer/bulk-order" element={<Buyerbulkorder />} />
         <Route path="/buyer/profile" element={<BuyerProfile />} />
 
-        {/* Farmer Routes */}
-        <Route path="/farmer/dashboard" element={<Dashboard />} />
-        <Route path="/farmer/crops" element={<Mycrops />} />
-        <Route path="/farmer/orders" element={<Orders />} />
-        <Route path="/farmer/bulk-requests" element={<BulkRequests />} />
-        <Route path="/farmer/earnings" element={<Earnings />} />
-        <Route path="/farmer/profile" element={<Profile />} />
-        
-        {/* NEW Farmer Policies Route */}
-        <Route path="/farmer/policies" element={<FarmerPolicies />} />
+        {/* Farmer Routes — all share the same OrdersProvider instance */}
+        <Route
+          path="/farmer/*"
+          element={
+            <OrdersProvider>
+              <Routes>
+                <Route path="dashboard"      element={<Dashboard />} />
+                <Route path="crops"          element={<Mycrops />} />
+                <Route path="orders"         element={<Orders />} />
+                <Route path="bulk-requests"  element={<BulkRequests />} />
+                <Route path="earnings"       element={<Earnings />} />
+                <Route path="profile"        element={<Profile />} />
+                <Route path="policies"       element={<FarmerPolicies />} />
+              </Routes>
+            </OrdersProvider>
+          }
+        />
         
         {/* Traceability Route */}
         <Route path="/trace/:batchId" element={<TraceabilityDetail />} />

@@ -18,6 +18,12 @@
   overflow: hidden;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
   font-family: 'Sora', sans-serif;
+  transition: width 0.22s ease, min-width 0.22s ease;
+}
+
+.sv-sidebar--collapsed {
+  width: 64px;
+  min-width: 64px;
 }
 
 /* Subtle texture overlay */
@@ -62,6 +68,7 @@
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.3px;
+  flex: 1;
 }
 
 /* Section Label */
@@ -178,4 +185,77 @@
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   margin-top: 8px;
   padding-top: 12px;
+}
+
+/* ── Collapse / Close button (shown when sidebar is open) ── */
+.sv-sidebar__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;      /* prevent flex from squishing it */
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;        /* icon inherits this via stroke="currentColor" */
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;            /* remove default button padding that can offset the icon */
+  line-height: 0;        /* kill line-height ghost space */
+  overflow: visible;     /* never clip the SVG */
+}
+
+.sv-sidebar__collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+/* Expand button shown below logo when collapsed */
+.sv-sidebar__expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  margin: 8px auto 4px;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 0;
+}
+
+.sv-sidebar__expand-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.65);
+}
+
+.sv-sidebar__expand-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Collapsed nav items — icon only, centered */
+.sv-sidebar--collapsed .sv-sidebar__nav {
+  padding: 4px 8px;
+}
+
+.sv-sidebar--collapsed .sv-sidebar__nav-item {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sv-sidebar--collapsed .sv-sidebar__bottom {
+  padding: 4px 8px 20px;
+}
+
+.sv-sidebar--collapsed .sv-sidebar__brand {
+  justify-content: center;
+  padding: 24px 12px 20px;
 }

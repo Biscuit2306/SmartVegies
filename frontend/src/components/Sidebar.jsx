@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/farmer-css/Sidebar.css";
 
@@ -13,7 +13,7 @@ const navItems = [
         <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
     ),
-    path: "/dashboard",
+    path: "/farmer/dashboard",
   },
   {
     label: "My Crops",
@@ -24,7 +24,7 @@ const navItems = [
         <path d="M12 8v8M8 12h8" />
       </svg>
     ),
-    path: "/crops",
+    path: "/farmer/crops",
   },
   {
     label: "Orders",
@@ -35,7 +35,7 @@ const navItems = [
         <path d="M16 10a4 4 0 01-8 0" />
       </svg>
     ),
-    path: "/orders",
+    path: "/farmer/orders",
   },
   {
     label: "Bulk Requests",
@@ -47,7 +47,7 @@ const navItems = [
         <line x1="10" y1="14" x2="14" y2="14" />
       </svg>
     ),
-    path: "/bulk-requests",
+    path: "/farmer/bulk-requests",
   },
   {
     label: "Earnings",
@@ -57,17 +57,7 @@ const navItems = [
         <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
       </svg>
     ),
-    path: "/earnings",
-  },
-  {
-    label: "Messages",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-      </svg>
-    ),
-    path: "/messages",
-    badge: 3,
+    path: "/farmer/earnings",
   },
   {
     label: "Profile",
@@ -77,21 +67,11 @@ const navItems = [
         <circle cx="12" cy="7" r="4" />
       </svg>
     ),
-    path: "/profile",
+    path: "/farmer/profile",
   },
 ];
 
 const bottomItems = [
-  {
-    label: "Settings",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-      </svg>
-    ),
-    path: "/settings",
-  },
   {
     label: "Logout",
     icon: (
@@ -101,7 +81,7 @@ const bottomItems = [
         <line x1="21" y1="12" x2="9" y2="12" />
       </svg>
     ),
-    path: "/logout",
+    path: "/login",
     danger: true,
   },
 ];
@@ -109,13 +89,16 @@ const bottomItems = [
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    return location.pathname === path || location.pathname.includes(path.split('/').pop());
+  };
 
   return (
-    <aside className="sv-sidebar">
+    <aside className={`sv-sidebar${collapsed ? " sv-sidebar--collapsed" : ""}`}>
       {/* Brand */}
-      <div className="sv-sidebar__brand">
+      <div className="sv-sidebar__brand" onClick={() => navigate("/farmer/dashboard")} style={{ cursor: "pointer" }}>
         <div className="sv-sidebar__logo">
           <svg viewBox="0 0 32 32" fill="none">
             <rect width="32" height="32" rx="8" fill="white" fillOpacity="0.15" />
@@ -123,11 +106,50 @@ const Sidebar = () => {
             <path d="M16 10C16 10 20 14 20 18a4 4 0 01-8 0c0-4 4-8 4-8z" fill="#2d5a27" />
           </svg>
         </div>
-        <span className="sv-sidebar__brand-name">SmartVegies</span>
+        {!collapsed && (
+          <>
+            <span className="sv-sidebar__brand-name">SmartVegies</span>
+            <button
+              className="sv-sidebar__collapse-btn"
+              onClick={(e) => { e.stopPropagation(); setCollapsed(true); }}
+              title="Close sidebar"
+            >
+              {/* X Close icon — explicit width/height px, strokeWidth=3, strokeLinecap=round */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: "block" }}
+              >
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" />
+              </svg>
+            </button>
+          </>
+        )}
       </div>
 
+      {/* When collapsed — show expand button below logo */}
+      {collapsed && (
+        <button
+          className="sv-sidebar__expand-btn"
+          onClick={() => setCollapsed(false)}
+          title="Expand sidebar"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      )}
+
       {/* Vendor Label */}
-      <div className="sv-sidebar__section-label">Vendor Portal</div>
+      {!collapsed && <div className="sv-sidebar__section-label">Vendor Portal</div>}
 
       {/* Main Nav */}
       <nav className="sv-sidebar__nav">
@@ -136,10 +158,11 @@ const Sidebar = () => {
             key={item.label}
             className={`sv-sidebar__nav-item ${isActive(item.path) ? "sv-sidebar__nav-item--active" : ""}`}
             onClick={() => navigate(item.path)}
+            title={collapsed ? item.label : undefined}
           >
             <span className="sv-sidebar__nav-icon">{item.icon}</span>
-            <span className="sv-sidebar__nav-label">{item.label}</span>
-            {item.badge && (
+            {!collapsed && <span className="sv-sidebar__nav-label">{item.label}</span>}
+            {!collapsed && item.badge && (
               <span className="sv-sidebar__nav-badge">{item.badge}</span>
             )}
           </button>
@@ -156,9 +179,10 @@ const Sidebar = () => {
             key={item.label}
             className={`sv-sidebar__nav-item ${item.danger ? "sv-sidebar__nav-item--danger" : ""} ${isActive(item.path) ? "sv-sidebar__nav-item--active" : ""}`}
             onClick={() => navigate(item.path)}
+            title={collapsed ? item.label : undefined}
           >
             <span className="sv-sidebar__nav-icon">{item.icon}</span>
-            <span className="sv-sidebar__nav-label">{item.label}</span>
+            {!collapsed && <span className="sv-sidebar__nav-label">{item.label}</span>}
           </button>
         ))}
       </div>

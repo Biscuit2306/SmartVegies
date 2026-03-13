@@ -2,6 +2,24 @@ import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../../components/Sidebar";
 import "../../styles/farmer-css/profile.css";
 
+// ── Persisted state helper ────────────────────────────────────
+const usePersistedState = (key, initialValue) => {
+  const [state, setStateRaw] = useState(() => {
+    try {
+      const saved = localStorage.getItem(key);
+      return saved !== null ? JSON.parse(saved) : initialValue;
+    } catch { return initialValue; }
+  });
+  const setState = (value) => {
+    setStateRaw((prev) => {
+      const next = typeof value === "function" ? value(prev) : value;
+      try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+  return [state, setState];
+};
+
 // ── Initial profile state ─────────────────────────────────────
 const INIT = {
   name:        "John Doe",
@@ -17,8 +35,6 @@ const INIT = {
   facebook:    "facebook.com/greenacresfarm",
   instagram:   "@greenacresfarm",
 };
-
-const GALLERY_EMOJIS = ["🍅🥦", "🌾", "🧺"];
 
 // ── Toast ─────────────────────────────────────────────────────
 const Toast = ({ message, onDone }) => {
@@ -38,11 +54,25 @@ const Toast = ({ message, onDone }) => {
 
 // ── Main Profile Page ─────────────────────────────────────────
 const Profile = () => {
-  const [form, setForm]         = useState(INIT);
-  const [saved, setSaved]       = useState(INIT);
+  const [saved, setSaved]       = usePersistedState("sv_profile", INIT);
+  const [form, setForm]         = useState(saved);
+  const [editMode, setEditMode] = useState(false);
   const [dirty, setDirty]       = useState(false);
   const [toast, setToast]       = useState(null);
   const [completion, setCompletion] = useState(85);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Avatar & cover image state (persisted as base64)
+  const [avatarSrc, setAvatarSrc]   = usePersistedState("sv_profile_avatar", null);
+  const [coverSrc, setCoverSrc]     = usePersistedState("sv_profile_cover", null);
+  const [galleryImgs, setGalleryImgs] = usePersistedState("sv_profile_gallery", []);
+
+  const avatarInputRef  = useRef(null);
+  const coverInputRef   = useRef(null);
+  const galleryInputRef = useRef(null);
+
+  // Sync form when saved changes externally (e.g. on mount from localStorage)
+  useEffect(() => { setForm(saved); }, []);
 
   // Track unsaved changes
   useEffect(() => {
@@ -60,19 +90,102 @@ const Profile = () => {
   const handle = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSave = () => {
-    setSaved({ ...form });
+    const updated = {
+      ...form,
+      name:     form.farmerName || form.name,
+      location: form.address    || form.location,
+    };
+    setForm(updated);
+    setSaved(updated);
     setDirty(false);
+    setEditMode(false);
     setToast("Profile saved successfully!");
+    // Notify other open tabs/pages that the profile name has changed
+    window.dispatchEvent(new Event("storage"));
   };
 
   const handleCancel = () => {
     setForm({ ...saved });
     setDirty(false);
+    setEditMode(false);
   };
+
+  const handleEditClick = () => {
+    setForm({ ...saved });
+    setEditMode(true);
+  };
+
+  // ── Image helpers ──
+  const readFileAsDataURL = (file) =>
+    new Promise((res) => {
+      const reader = new FileReader();
+      reader.onload = (e) => res(e.target.result);
+      reader.readAsDataURL(file);
+    });
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const src = await readFileAsDataURL(file);
+    setAvatarSrc(src);
+    setToast("Profile photo updated!");
+    e.target.value = "";
+  };
+
+  const handleCoverChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const src = await readFileAsDataURL(file);
+    setCoverSrc(src);
+    setToast("Cover photo updated!");
+    e.target.value = "";
+  };
+
+  const handleGalleryAdd = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const srcs = await Promise.all(files.map(readFileAsDataURL));
+    setGalleryImgs((prev) => [...prev, ...srcs]);
+    setToast(`${srcs.length} photo${srcs.length > 1 ? "s" : ""} added!`);
+    e.target.value = "";
+  };
+
+  const handleGalleryRemove = (idx) => {
+    setGalleryImgs((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const STATIC_GALLERY = ["🍅🥦", "🌾", "🧺"];
+
+  const initials = (name) =>
+    (name || "").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <div className="svp__layout">
-      <Sidebar />
+      <Sidebar activePage="Profile" />
+
+      {/* Hidden file inputs */}
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="svp__hidden-input"
+        onChange={handleAvatarChange}
+      />
+      <input
+        ref={coverInputRef}
+        type="file"
+        accept="image/*"
+        className="svp__hidden-input"
+        onChange={handleCoverChange}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="svp__hidden-input"
+        onChange={handleGalleryAdd}
+      />
 
       <div className="svp__main">
         {/* Top Bar */}
@@ -86,13 +199,29 @@ const Profile = () => {
           </div>
 
           <div className="svp__topbar-right">
-            <button className="svp__topbar-icon-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 01-3.46 0" />
-              </svg>
-              <span className="svp__notif-dot" />
-            </button>
+            <div className="svp__notif-wrapper">
+              <button className="svp__notif-btn" title="Notifications" onClick={() => setShowNotifications(!showNotifications)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="17" height="17">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </svg>
+                <span className="svp__notif-dot" />
+              </button>
+              {showNotifications && (
+                <div className="svp__notif-panel">
+                  <div className="svp__notif-panel-header">Notifications</div>
+                  <div className="svp__notif-panel-body">
+                    <div className="svp__notif-item">✓ Low stock alert for Organic Carrots</div>
+                    <div className="svp__notif-item">💬 New order from Sarah Jenkins</div>
+                    <div className="svp__notif-item">⚠️ Inventory review needed</div>
+                    <div className="svp__notif-item">✅ Order #SV-9021 completed</div>
+                  </div>
+                  <div className="svp__notif-panel-footer">
+                    <button onClick={() => setShowNotifications(false)} className="svp__notif-mark-read">Mark all as read</button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="svp__vendor-info">
               <div className="svp__vendor-text">
@@ -100,14 +229,17 @@ const Profile = () => {
                 <div className="svp__vendor-tier">Verified Farmer</div>
               </div>
               <div className="svp__vendor-avatar-sm">
-                {saved.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                {avatarSrc
+                  ? <img src={avatarSrc} alt="avatar" />
+                  : initials(saved.name)
+                }
               </div>
             </div>
           </div>
         </header>
 
         {/* Unsaved changes banner */}
-        {dirty && (
+        {dirty && editMode && (
           <div className="svp__unsaved-banner">
             <div className="svp__unsaved-banner-left">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -118,10 +250,8 @@ const Profile = () => {
               You have unsaved changes
             </div>
             <div className="svp__unsaved-btns">
-              <button className="svp__cancel-btn" style={{ padding: "6px 14px", fontSize: "12px" }}
-                onClick={handleCancel}>Discard</button>
-              <button className="svp__save-btn" style={{ padding: "6px 14px", fontSize: "12px" }}
-                onClick={handleSave}>Save Now</button>
+              <button className="svp__cancel-btn" onClick={handleCancel}>Discard</button>
+              <button className="svp__save-btn" onClick={handleSave}>Save Now</button>
             </div>
           </div>
         )}
@@ -131,8 +261,11 @@ const Profile = () => {
           <div className="svp__hero-card">
             {/* Cover */}
             <div className="svp__cover-wrap">
-              <div className="svp__cover-emoji-bg">🌾🌿🍃</div>
-              <button className="svp__update-cover-btn">
+              {coverSrc
+                ? <img src={coverSrc} alt="cover" className="svp__cover-img" />
+                : <div className="svp__cover-emoji-bg">🌾🌿🍃</div>
+              }
+              <button className="svp__update-cover-btn" onClick={() => coverInputRef.current?.click()}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -147,26 +280,34 @@ const Profile = () => {
                 {/* Avatar */}
                 <div className="svp__avatar-wrap">
                   <div className="svp__avatar">
-                    {form.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                    {avatarSrc
+                      ? <img src={avatarSrc} alt="avatar" />
+                      : initials(form.name)
+                    }
                   </div>
-                  <button className="svp__avatar-edit-btn" title="Change photo">
+                  <button
+                    className="svp__avatar-edit-btn"
+                    title="Change photo"
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                      <circle cx="12" cy="13" r="4" />
+                      <path d="M12 16V8" />
+                      <path d="M9 11l3-3 3 3" />
+                      <path d="M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
                     </svg>
                   </button>
                 </div>
 
                 {/* Info */}
                 <div className="svp__profile-info">
-                  <div className="svp__profile-name">{form.name}</div>
+                  <div className="svp__profile-name">{saved.name}</div>
                   <div className="svp__profile-meta">
                     <div className="svp__profile-meta-item">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>
-                      {form.location}
+                      {saved.address || saved.location}
                     </div>
                     <div className="svp__profile-meta-item">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -175,7 +316,7 @@ const Profile = () => {
                         <line x1="8" y1="2" x2="8" y2="6" />
                         <line x1="3" y1="10" x2="21" y2="10" />
                       </svg>
-                      Joined {form.joinedYear}
+                      Joined {saved.joinedYear}
                     </div>
                     <span className="svp__verified-badge">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -188,10 +329,22 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Actions — Edit button only when not in edit mode; Save+Cancel when editing */}
               <div className="svp__profile-actions">
-                <button className="svp__save-btn" onClick={handleSave}>Save Profile</button>
-                <button className="svp__cancel-btn" onClick={handleCancel}>Cancel</button>
+                {editMode ? (
+                  <>
+                    <button className="svp__save-btn" onClick={handleSave}>Save Profile</button>
+                    <button className="svp__cancel-btn" onClick={handleCancel}>Cancel</button>
+                  </>
+                ) : (
+                  <button className="svp__edit-btn" onClick={handleEditClick}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -220,12 +373,12 @@ const Profile = () => {
                   <div className="svp__form-group">
                     <label className="svp__form-label">Farm Name</label>
                     <input className="svp__form-input" name="farmName" value={form.farmName} onChange={handle}
-                      placeholder="e.g. Green Acres Farm" />
+                      placeholder="e.g. Green Acres Farm" disabled={!editMode} />
                   </div>
                   <div className="svp__form-group">
                     <label className="svp__form-label">Farmer Name</label>
                     <input className="svp__form-input" name="farmerName" value={form.farmerName} onChange={handle}
-                      placeholder="e.g. John Doe" />
+                      placeholder="e.g. John Doe" disabled={!editMode} />
                   </div>
                 </div>
 
@@ -238,7 +391,8 @@ const Profile = () => {
                         <circle cx="12" cy="10" r="3" />
                       </svg>
                       <input className="svp__form-input svp__form-input--with-icon" name="address"
-                        value={form.address} onChange={handle} placeholder="Street address, city, state, zip" />
+                        value={form.address} onChange={handle} placeholder="Street address, city, state, zip"
+                        disabled={!editMode} />
                     </div>
                   </div>
                 </div>
@@ -247,7 +401,8 @@ const Profile = () => {
                   <div className="svp__form-group svp__form-group--full">
                     <label className="svp__form-label">Farm Description</label>
                     <textarea className="svp__form-textarea" name="description" value={form.description}
-                      onChange={handle} placeholder="Describe your farm, specialties, practices..." />
+                      onChange={handle} placeholder="Describe your farm, specialties, practices..."
+                      disabled={!editMode} />
                   </div>
                 </div>
               </div>
@@ -271,12 +426,12 @@ const Profile = () => {
                   <div className="svp__form-group">
                     <label className="svp__form-label">Email Address</label>
                     <input className="svp__form-input" name="email" type="email" value={form.email}
-                      onChange={handle} placeholder="you@yourfarm.com" />
+                      onChange={handle} placeholder="you@yourfarm.com" disabled={!editMode} />
                   </div>
                   <div className="svp__form-group">
                     <label className="svp__form-label">Phone Number</label>
                     <input className="svp__form-input" name="phone" type="tel" value={form.phone}
-                      onChange={handle} placeholder="e.g. +1 (503) 555-0123" />
+                      onChange={handle} placeholder="e.g. +1 (503) 555-0123" disabled={!editMode} />
                   </div>
                 </div>
               </div>
@@ -301,17 +456,17 @@ const Profile = () => {
                   <div className="svp__social-item">
                     <div className="svp__social-icon svp__social-icon--web">🌐</div>
                     <input className="svp__form-input" name="website" value={form.website}
-                      onChange={handle} placeholder="www.yourfarm.com" />
+                      onChange={handle} placeholder="www.yourfarm.com" disabled={!editMode} />
                   </div>
                   <div className="svp__social-item">
                     <div className="svp__social-icon svp__social-icon--fb">📘</div>
                     <input className="svp__form-input" name="facebook" value={form.facebook}
-                      onChange={handle} placeholder="facebook.com/yourpage" />
+                      onChange={handle} placeholder="facebook.com/yourpage" disabled={!editMode} />
                   </div>
                   <div className="svp__social-item">
                     <div className="svp__social-icon svp__social-icon--ig">📸</div>
                     <input className="svp__form-input" name="instagram" value={form.instagram}
-                      onChange={handle} placeholder="@yourhandle" />
+                      onChange={handle} placeholder="@yourhandle" disabled={!editMode} />
                   </div>
                 </div>
               </div>
@@ -332,16 +487,40 @@ const Profile = () => {
                     </svg>
                     Farm Gallery
                   </div>
-                  <button className="svp__gallery-manage-btn">Manage</button>
+                  <button
+                    className="svp__gallery-manage-btn"
+                    onClick={() => setGalleryImgs([])}
+                    title="Clear all uploaded photos"
+                  >
+                    Clear All
+                  </button>
                 </div>
 
                 <div className="svp__gallery-grid">
-                  {GALLERY_EMOJIS.map((em, i) => (
-                    <div key={i} className="svp__gallery-img-wrap" title="Click to view">
-                      <span style={{ fontSize: 36 }}>{em}</span>
+                  {/* Static emoji placeholders */}
+                  {STATIC_GALLERY.map((em, i) => (
+                    <div key={`static-${i}`} className="svp__gallery-img-wrap" title="Farm photo">
+                      <span className="svp__gallery-emoji">{em}</span>
                     </div>
                   ))}
-                  <button className="svp__gallery-add-btn">
+                  {/* Uploaded photos */}
+                  {galleryImgs.map((src, i) => (
+                    <div key={`uploaded-${i}`} className="svp__gallery-img-wrap svp__gallery-img-wrap--uploaded">
+                      <img src={src} alt={`gallery-${i}`} />
+                      <button
+                        className="svp__gallery-remove-btn"
+                        onClick={() => handleGalleryRemove(i)}
+                        title="Remove photo"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                  {/* Add photo button */}
+                  <button className="svp__gallery-add-btn" onClick={() => galleryInputRef.current?.click()}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
