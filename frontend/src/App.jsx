@@ -19,6 +19,7 @@ import Orders from "./pages/farmer/Orders";
 import BulkRequests from "./pages/farmer/BulkRequests";
 import Earnings from "./pages/farmer/Earnings";
 import Profile from "./pages/farmer/Profile";
+import FarmerPolicies from "./pages/farmer/FarmerPolicies"; // <-- New Policies Page
 
 // Traceability Details
 import TraceabilityDetail from "./pages/TraceabilityDetail"; 
@@ -91,6 +92,9 @@ function App() {
         <Route path="/farmer/bulk-requests" element={<BulkRequests />} />
         <Route path="/farmer/earnings" element={<Earnings />} />
         <Route path="/farmer/profile" element={<Profile />} />
+        
+        {/* NEW Farmer Policies Route */}
+        <Route path="/farmer/policies" element={<FarmerPolicies />} />
         
         {/* Traceability Route */}
         <Route path="/trace/:batchId" element={<TraceabilityDetail />} />
