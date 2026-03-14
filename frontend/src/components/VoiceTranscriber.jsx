@@ -4,8 +4,8 @@ import axios from "axios";
 const LANGUAGES = [
     { code: "en", label: "English" },
     { code: "hi", label: "Hindi" },
-    { code: "ur", label: "Urdu" },
-    { code: "pa", label: "Punjabi" },
+    // { code: "ur", label: "Urdu" },
+    // { code: "pa", label: "Punjabi" },
     { code: "mr", label: "Marathi" },
 ];
 
@@ -60,20 +60,25 @@ export default function VoiceTranscriber() {
             audioContextRef.current = audioContext;
             analyzerRef.current = analyzer;
 
-            // Start recording
-            const recorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
+            // Let the browser pick its most stable default audio format
+            const recorder = new MediaRecorder(stream);
 
             recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) audioChunksRef.current.push(e.data);
+                if (e.data && e.data.size > 0) {
+                    audioChunksRef.current.push(e.data);
+                }
             };
 
             recorder.onstop = () => {
-                const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-                const recordedFile = new File([blob], `recording-${Date.now()}.webm`, {
-                    type: "audio/webm",
+                // Create one solid, uncorrupted audio file using the browser's native mimeType
+                const safeMimeType = recorder.mimeType || 'audio/webm';
+                const extension = safeMimeType.includes('mp4') ? 'mp4' : 'webm';
+                
+                const blob = new Blob(audioChunksRef.current, { type: safeMimeType });
+                const recordedFile = new File([blob], `live-recording-${Date.now()}.${extension}`, {
+                    type: safeMimeType,
                 });
+                
                 setFile(recordedFile);
                 stream.getTracks().forEach((t) => t.stop());
 
@@ -85,7 +90,10 @@ export default function VoiceTranscriber() {
             };
 
             mediaRecorderRef.current = recorder;
-            recorder.start();
+            
+            // Start recording in one continuous block (fixes corruption issues)
+            recorder.start(); 
+            
             setStatus("recording");
             setError("");
 
@@ -101,17 +109,19 @@ export default function VoiceTranscriber() {
 
         } catch (err) {
             console.error("[VoiceTranscriber] Microphone error:", err.message);
-            setError("Microphone access denied. Please allow microphone permissions.");
+            setError("Microphone access denied or browser incompatible. Please check permissions.");
         }
     };
 
     const stopRecording = () => {
-        mediaRecorderRef.current?.stop();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            mediaRecorderRef.current.stop();
+        }
         setStatus("idle");
         if (animationIdRef.current) {
             cancelAnimationFrame(animationIdRef.current);
         }
-        if (audioContextRef.current) {
+        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
             audioContextRef.current.close();
         }
     };
@@ -145,41 +155,30 @@ export default function VoiceTranscriber() {
 
             const { data } = response;
 
-            if (!data?.data?.transcript) {
+            // We intelligently check for the transcript wherever the backend put it
+            const finalTranscript = data?.text || data?.transcript || data?.data?.transcript;
+
+            if (!finalTranscript) {
                 throw new Error("Invalid response format from server");
             }
 
-            setTranscript(data.data.transcript);
+            setTranscript(finalTranscript);
             setMeta({
-                confidence: data.data.confidence,
-                duration: data.data.duration,
-                wordCount: data.data.wordCount,
+                confidence: data?.confidence || data?.data?.confidence,
+                duration: data?.duration || data?.data?.duration,
+                wordCount: data?.wordCount || data?.data?.wordCount,
             });
+            
             setStatus("done");
             console.log("[VoiceTranscriber] Transcription complete");
 
         } catch (err) {
             console.error("[VoiceTranscriber] Error:", err.message);
-            console.error("[VoiceTranscriber] Response status:", err?.response?.status);
-            console.error("[VoiceTranscriber] Response data:", err?.response?.data);
-
-            // Show full error details for debugging
-            console.log("[VoiceTranscriber] Full error object:", JSON.stringify({
-                message: err?.message,
-                status: err?.response?.status,
-                statusText: err?.response?.statusText,
-                data: err?.response?.data,
-            }, null, 2));
-
+            
             let errorMessage = "Transcription failed. Please try again.";
 
-            // Provide specific error messages based on status code
             if (err.response?.status === 422) {
-                // Empty transcript or no speech detected
                 errorMessage = err?.response?.data?.message || "No speech detected. Please record clear speech and try again.";
-                if (err?.response?.data?.hint) {
-                    errorMessage += "\n\nTips: " + err?.response?.data?.hint;
-                }
             } else if (err.response?.status === 400) {
                 errorMessage = "Invalid file. Please upload a valid audio file.";
             } else if (err.response?.status === 500) {

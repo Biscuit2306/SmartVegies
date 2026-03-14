@@ -27,6 +27,9 @@ import TraceabilityDetail from "./pages/TraceabilityDetail";
 // Shared Context
 import { OrdersProvider } from "./Context/Orderscontext";
 
+// ---> Voice Assistant Import <---
+import FloatingAssistant from "./components/FloatingAssistant";
+
 function App() {
 
   // 1. Load the Google Translate script globally when the App loads
@@ -64,52 +67,58 @@ function App() {
     window.location.reload();
   };
 
-  return (
+return (
     <Router>
-      
-      {/* --- GLOBAL TRANSLATE BUTTON --- */}
-      <button className="global-translate-btn" onClick={toggleMarathi}>
-        मराठी / EN
-      </button>
-      <div id="google_translate_element" style={{ display: "none" }}></div>
-      {/* ------------------------------- */}
-
-      <Routes>
-
-        {/* Main Pages */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<LoginRegister />} />
-
-        {/* Buyer Routes */}
-        <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
-        <Route path="/buyer/marketplace" element={<BuyerMarketplace />} />
-        <Route path="/buyer/cart" element={<BuyerCart />} />
-        <Route path="/buyer/orders" element={<BuyerMyorders />} />
-        <Route path="/buyer/bulk-order" element={<Buyerbulkorder />} />
-        <Route path="/buyer/profile" element={<BuyerProfile />} />
-
-        {/* Farmer Routes — all share the same OrdersProvider instance */}
-        <Route
-          path="/farmer/*"
-          element={
-            <OrdersProvider>
-              <Routes>
-                <Route path="dashboard"      element={<Dashboard />} />
-                <Route path="crops"          element={<Mycrops />} />
-                <Route path="orders"         element={<Orders />} />
-                <Route path="bulk-requests"  element={<BulkRequests />} />
-                <Route path="earnings"       element={<Earnings />} />
-                <Route path="profile"        element={<Profile />} />
-                <Route path="policies"       element={<FarmerPolicies />} />
-              </Routes>
-            </OrdersProvider>
-          }
-        />
+      {/* ADD THIS WRAPPER DIV */}
+      <div className="app-wrapper" style={{ position: "relative", minHeight: "100vh" }}>
         
-        {/* Traceability Route */}
-        <Route path="/trace/:batchId" element={<TraceabilityDetail />} />
+        {/* --- GLOBAL TRANSLATE BUTTON --- */}
+        <button className="global-translate-btn" onClick={toggleMarathi}>
+          मराठी / EN
+        </button>
+        <div id="google_translate_element" style={{ display: "none" }}></div>
+        {/* ------------------------------- */}
 
-      </Routes>
+        <Routes>
+          {/* Main Pages */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<LoginRegister />} />
+
+          {/* Buyer Routes */}
+          <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
+          <Route path="/buyer/marketplace" element={<BuyerMarketplace />} />
+          <Route path="/buyer/cart" element={<BuyerCart />} />
+          <Route path="/buyer/orders" element={<BuyerMyorders />} />
+          <Route path="/buyer/bulk-order" element={<Buyerbulkorder />} />
+          <Route path="/buyer/profile" element={<BuyerProfile />} />
+
+          {/* Farmer Routes */}
+          <Route
+            path="/farmer/*"
+            element={
+              <OrdersProvider>
+                <Routes>
+                  <Route path="dashboard"      element={<Dashboard />} />
+                  <Route path="crops"          element={<Mycrops />} />
+                  <Route path="orders"         element={<Orders />} />
+                  <Route path="bulk-requests"  element={<BulkRequests />} />
+                  <Route path="earnings"       element={<Earnings />} />
+                  <Route path="profile"        element={<Profile />} />
+                  <Route path="policies"       element={<FarmerPolicies />} />
+                </Routes>
+              </OrdersProvider>
+            }
+          />
+          
+          {/* Traceability Route */}
+          <Route path="/trace/:batchId" element={<TraceabilityDetail />} />
+
+        </Routes>
+
+        {/* ---> GLOBAL VOICE ASSISTANT ADDED HERE <--- */}
+        <FloatingAssistant />
+
+      </div> {/* END WRAPPER DIV */}
     </Router>
   );
 }
