@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-/* ============================================================
-   BUYER DASHBOARD  —  SmartVegies
-   Single self-contained file. Sidebar + styles all inline.
-   Namespace: svbd__*
-   ============================================================ */
-
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 .svbd__layout{display:flex;min-height:100vh;background:#f4faf2;font-family:'Nunito',sans-serif;}
-
-/* ── SIDEBAR ── */
 .svbd__sidebar{width:222px;min-width:222px;height:100vh;background:linear-gradient(170deg,#56d828 0%,#3cba22 45%,#2b9215 100%);display:flex;flex-direction:column;position:sticky;top:0;overflow:hidden;font-family:'Nunito',sans-serif;box-shadow:3px 0 20px rgba(50,170,20,0.30);flex-shrink:0;}
 .svbd__sidebar::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 80% 8%,rgba(255,255,255,0.12) 0%,transparent 55%),radial-gradient(circle at 10% 92%,rgba(0,0,0,0.06) 0%,transparent 50%);}
 .svbd__brand{display:flex;align-items:center;gap:10px;padding:20px 18px 16px;cursor:pointer;position:relative;z-index:1;}
@@ -32,8 +24,6 @@ const STYLES = `
 .svbd__wallet-amt{font-size:24px;font-weight:900;color:white;letter-spacing:-0.5px;margin-bottom:13px;}
 .svbd__wallet-btn{width:100%;padding:9px;border-radius:10px;border:none;background:white;color:#2a8a14;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.18s;}
 .svbd__wallet-btn:hover{background:#f0fff0;transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,0.14);}
-
-/* ── MAIN ── */
 .svbd__main{flex:1;display:flex;flex-direction:column;min-width:0;overflow-x:hidden;}
 .svbd__topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;background:#fff;border-bottom:1px solid #e4f0e0;position:sticky;top:0;z-index:100;gap:14px;}
 .svbd__search-wrap{position:relative;flex:1;max-width:420px;}
@@ -47,7 +37,10 @@ const STYLES = `
 .svbd__notif-btn:hover{border-color:#4cd626;background:#f0fff0;}
 .svbd__notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#e05252;border-radius:50%;border:1.5px solid white;}
 .svbd__avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#4cd626,#2e9918);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:white;border:2px solid #c8ecc0;cursor:pointer;}
-.svbd__content{flex:1;padding:24px 28px 28px;display:flex;flex-direction:column;gap:22px;}
+
+/* ---> FIX: Increased padding-bottom to 120px so you can scroll past the floating AI assistant <--- */
+.svbd__content{flex:1;padding:24px 28px 120px;display:flex;flex-direction:column;gap:22px;}
+
 .svbd__welcome-row{display:flex;align-items:center;justify-content:space-between;gap:16px;animation:svbd-up 0.35s ease both;}
 .svbd__welcome-h{font-size:26px;font-weight:900;color:#1a3a1a;margin-bottom:4px;letter-spacing:-0.5px;}
 .svbd__welcome-sub{font-size:13.5px;color:#7aaa7a;font-weight:600;}
@@ -59,26 +52,28 @@ const STYLES = `
 .svbd__sec-title svg{width:18px;height:18px;}
 .svbd__view-all{font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;color:#3cba22;background:none;border:none;cursor:pointer;padding:0;transition:color 0.15s;}
 .svbd__view-all:hover{color:#2a8a14;}
-
-/* Products */
 .svbd__products-section{animation:svbd-up 0.4s ease 0.05s both;}
-.svbd__products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-.svbd__product-card{background:white;border-radius:18px;border:1.5px solid #e4f0e0;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:pointer;}
-.svbd__product-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(60,185,33,0.14);}
-.svbd__product-img{position:relative;height:150px;background:linear-gradient(135deg,#f0f9ec,#e4f4de);display:flex;align-items:center;justify-content:center;font-size:64px;}
-.svbd__wish-btn{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;border:none;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.12);transition:transform 0.18s;font-size:15px;}
-.svbd__wish-btn:hover{transform:scale(1.18);}
-.svbd__product-info{padding:12px 14px 14px;}
-.svbd__product-name{font-size:14.5px;font-weight:900;color:#1a3a1a;margin-bottom:2px;line-height:1.3;}
-.svbd__product-farm{font-size:11.5px;color:#9aaa9a;font-weight:600;margin-bottom:10px;}
-.svbd__product-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
-.svbd__product-price{font-size:15.5px;font-weight:900;color:#3cba22;}
-.svbd__cart-btn{width:36px;height:36px;border-radius:50%;border:none;background:linear-gradient(135deg,#5ae030,#3cba22);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.18s;box-shadow:0 3px 10px rgba(60,185,33,0.38);flex-shrink:0;}
-.svbd__cart-btn:hover{transform:scale(1.12);box-shadow:0 5px 16px rgba(60,185,33,0.52);}
-.svbd__cart-btn svg{width:16px;height:16px;}
-.svbd__cart-btn.svbd__done{background:linear-gradient(135deg,#1a8a00,#0f6600)!important;}
-
-/* Orders */
+.svbd__products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.svbd__product-card{background:white;border-radius:16px;border:1.5px solid #e4f0e0;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;cursor:pointer;position:relative;}
+.svbd__product-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(60,185,33,0.14);}
+.svbd__product-img{position:relative;height:160px;background:linear-gradient(135deg,#f0f9ec,#e0f0d8);display:flex;align-items:center;justify-content:center;font-size:72px;overflow:hidden;}
+.svbd__wish-btn{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.14);transition:transform 0.18s;font-size:15px;z-index:2;}
+.svbd__wish-btn:hover{transform:scale(1.15);}
+.svbd__product-badge{position:absolute;bottom:10px;left:10px;background:#3cba22;color:white;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:0.3px;text-transform:uppercase;z-index:2;}
+.svbd__product-info{padding:13px 14px 15px;}
+.svbd__product-name{font-size:14px;font-weight:900;color:#1a3a1a;margin-bottom:5px;line-height:1.3;}
+.svbd__product-farm{font-size:11.5px;color:#9aaa9a;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.svbd__product-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+.svbd__product-price{font-size:16px;font-weight:900;color:#3cba22;}
+.svbd__price-unit{font-size:11.5px;font-weight:600;color:#9aaa9a;}
+.svbd__product-actions{border-top:1px solid #eaf0e0;padding-top:8px;display:flex;flex-direction:column;gap:8px;}
+.svbd__cart-btn-full{width:100%;height:38px;border-radius:10px;border:none;background:#3cba22;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;transition:all 0.18s;box-shadow:0 3px 10px rgba(60,185,33,0.34);}
+.svbd__cart-btn-full:hover{background:#2a8a14;box-shadow:0 5px 16px rgba(60,185,33,0.50);}
+.svbd__cart-btn-full.svbd__done{background:#1a6a08!important;}
+.svbd__cart-btn-full svg{width:16px;height:16px;}
+.svbd__detail-btn{width:100%;padding:9px 0;border:1.5px solid #ddeeda;border-radius:10px;background:white;font-family:'Nunito',sans-serif;font-size:12.5px;font-weight:700;color:#3cba22;cursor:pointer;text-align:center;transition:border-color 0.15s,background 0.15s,color 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.svbd__detail-btn:hover{border-color:#3cba22;background:#f5fff3;color:#2a8a14;}
+.svbd__detail-btn svg{width:14px;height:14px;}
 .svbd__orders-section{animation:svbd-up 0.4s ease 0.1s both;}
 .svbd__orders-card{background:white;border-radius:16px;border:1.5px solid #e4f0e0;overflow:hidden;}
 .svbd__otable{width:100%;border-collapse:collapse;}
@@ -110,8 +105,6 @@ const STYLES = `
 .svbd__dl-btn{display:flex;align-items:center;gap:7px;font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:800;color:#3cba22;background:none;border:none;cursor:pointer;transition:color 0.15s;}
 .svbd__dl-btn:hover{color:#2a8a14;}
 .svbd__dl-btn svg{width:15px;height:15px;}
-
-/* Right col */
 .svbd__delivery-card{background:white;border-radius:16px;border:1.5px solid #e4f0e0;padding:16px;animation:svbd-up 0.4s ease 0.08s both;}
 .svbd__delivery-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .svbd__delivery-title{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:900;color:#1a3a1a;}
@@ -150,7 +143,6 @@ const STYLES = `
 .svbd__footer-links{display:flex;gap:20px;}
 .svbd__flink{font-family:'Nunito',sans-serif;font-size:11.5px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#7a9a7a;background:none;border:none;cursor:pointer;transition:color 0.15s;padding:0;}
 .svbd__flink:hover{color:#3cba22;}
-
 .svbd__toast{position:fixed;bottom:28px;right:28px;background:#2a6a14;color:white;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,0.18);display:flex;align-items:center;gap:8px;z-index:1000;animation:svbd-slide-r 0.3s ease;font-family:'Nunito',sans-serif;}
 .svbd__toast svg{width:15px;height:15px;}
 .svbd__modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -172,17 +164,31 @@ const STYLES = `
 @media(max-width:700px){.svbd__content{padding:16px}.svbd__products-grid{grid-template-columns:1fr 1fr}}
 `;
 
-/* ─── Data ─────────────────────────────────────── */
-const PRODUCTS = [
-  { id:1, name:"Organic Broccoli", vendor:"Green Valley Farms", price:"$3.99/kg", emoji:"🥦", liked:false },
-  { id:2, name:"Sweet Carrots",    vendor:"Sunshine Acres",     price:"$2.49/lb", emoji:"🥕", liked:true  },
-  { id:3, name:"Cherry Tomatoes",  vendor:"Hillside Organic",   price:"$4.50/pk", emoji:"🍅", liked:false },
-];
-const ORDERS = [
-  { id:"#SV-84920", vendor:"Green Valley Farms", date:"Oct 24, 2023", status:"delivered",  amt:"$32.40" },
-  { id:"#SV-84811", vendor:"Sunshine Acres",     date:"Oct 21, 2023", status:"transit",    amt:"$18.90" },
-  { id:"#SV-84790", vendor:"Hillside Organic",   date:"Oct 18, 2023", status:"delivered",  amt:"$51.20" },
-  { id:"#SV-84750", vendor:"Root & Vine Co.",    date:"Oct 14, 2023", status:"processing", amt:"$22.00" },
+/* ─── Read cart from localStorage ─────────────────── */
+const readCart = () => { try { return JSON.parse(localStorage.getItem("sv_cart") || "[]"); } catch { return []; } };
+const saveCart = (items) => { try { localStorage.setItem("sv_cart", JSON.stringify(items)); } catch {} };
+
+/* ─── Read orders from localStorage ───────────────── */
+const readLiveOrders = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem("sv_orders") || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.map(o => ({
+      id:     String(o.id || ""),
+      vendor: String(o.products?.[0]?.name || o.name || "SmartVegies Order"),
+      date:   String(o.date || ""),
+      status: o.status === "shipped" ? "transit" : String(o.status || "processing"),
+      amt:    `₹${parseFloat(o.price || 0).toFixed(2)}`,
+      isNew:  false,
+    }));
+  } catch { return []; }
+};
+
+const DEMO_ORDERS = [
+  { id:"#SV-84920", vendor:"Green Valley Farms", date:"Oct 24, 2023", status:"delivered",  amt:"₹32.40",  isNew:false },
+  { id:"#SV-84811", vendor:"Sunshine Acres",     date:"Oct 21, 2023", status:"transit",    amt:"₹18.90",  isNew:false },
+  { id:"#SV-84790", vendor:"Hillside Organic",   date:"Oct 18, 2023", status:"delivered",  amt:"₹51.20",  isNew:false },
+  { id:"#SV-84750", vendor:"Root & Vine Co.",    date:"Oct 14, 2023", status:"processing", amt:"₹22.00",  isNew:false },
 ];
 
 const STATUS_LABEL = { delivered:"Delivered", transit:"In Transit", processing:"Processing", cancelled:"Cancelled" };
@@ -210,7 +216,7 @@ const VENDORS = [
   { name:"Sunshine Acres",     rating:"4.7", dist:"5 miles away",  emoji:"☀️" },
 ];
 
-/* ─── Toast ─────────────────────────────────────── */
+/* ─── Toast ─────────────────────────────────────────── */
 const Toast = ({ msg, onDone }) => {
   useEffect(() => { const t = setTimeout(onDone, 2200); return () => clearTimeout(t); }, [onDone]);
   return (
@@ -221,14 +227,64 @@ const Toast = ({ msg, onDone }) => {
   );
 };
 
-/* ─── Main ────────────────────────────────────────── */
+/* ─── Impact Report Modal ────────────────────────────── */
+const ImpactModal = ({ onClose }) => (
+  <div className="svbd__modal-overlay" onClick={onClose}>
+    <div className="svbd__modal" onClick={e => e.stopPropagation()}>
+      <div className="svbd__modal-title">🌱 Your Eco Impact Report</div>
+      <div className="svbd__modal-sub">March 2024 — You're making a difference!</div>
+      {[
+        { icon:"🌿", val:"45 kg",   lbl:"CO₂ Emissions Reduced" },
+        { icon:"💧", val:"320 L",   lbl:"Water Saved" },
+        { icon:"🚜", val:"12",      lbl:"Local Farmers Supported" },
+        { icon:"♻️", val:"8 kg",   lbl:"Packaging Waste Avoided" },
+      ].map(s => (
+        <div key={s.lbl} className="svbd__modal-stat">
+          <div className="svbd__modal-stat-icon">{s.icon}</div>
+          <div className="svbd__modal-stat-info">
+            <div className="svbd__modal-stat-val">{s.val}</div>
+            <div className="svbd__modal-stat-lbl">{s.lbl}</div>
+          </div>
+        </div>
+      ))}
+      <button className="svbd__modal-close" onClick={onClose}>Close Report</button>
+    </div>
+  </div>
+);
+
+/* ─── Main ────────────────────────────────────────────── */
 export default function BuyerDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [products, setProducts] = useState(PRODUCTS);
-  const [cartDone, setCartDone] = useState({});
-  const [toast,    setToast]    = useState(null);
-  const [search,   setSearch]   = useState("");
+
+  const [products,    setProducts]    = useState(FALLBACK_PRODUCTS);
+  const [cartDone,    setCartDone]    = useState({});
+  const [toast,       setToast]       = useState(null);
+  const [search,      setSearch]      = useState("");
+  const [showImpact,  setShowImpact]  = useState(false);
+
+  /* Build order rows merging live + demo */
+  const buildOrders = () => {
+    const live = readLiveOrders();
+    const mapped = live.map((o, idx) => ({ ...o, isNew: idx === 0 }));
+    return mapped.length ? [...mapped, ...DEMO_ORDERS] : DEMO_ORDERS;
+  };
+  const [orderRows, setOrderRows] = useState(buildOrders);
+
+  useEffect(() => {
+    setOrderRows(buildOrders());
+    const onFocus = () => setOrderRows(buildOrders());
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
+  /* Cart count badge */
+  const [cartCount, setCartCount] = useState(() => readCart().reduce((s, i) => s + (i.qty || 1), 0));
+  useEffect(() => {
+    const update = () => setCartCount(readCart().reduce((s, i) => s + (i.qty || 1), 0));
+    window.addEventListener("focus", update);
+    return () => window.removeEventListener("focus", update);
+  }, []);
 
   const fire = (msg) => setToast(msg);
 
@@ -285,6 +341,8 @@ export default function BuyerDashboard() {
     <>
       <style>{STYLES}</style>
       <div className="svbd__layout">
+
+        {/* ════ SIDEBAR ════ */}
         <aside className="svbd__sidebar">
           <div className="svbd__brand" onClick={() => navigate("/buyer/dashboard")}>
             <div className="svbd__brand-logo">🌿</div>
@@ -313,7 +371,9 @@ export default function BuyerDashboard() {
               </button>
             ))}
           </nav>
+
           <div className="svbd__spacer"/>
+
           <div className="svbd__wallet">
             <div className="svbd__wallet-lbl">Current Balance</div>
             <div className="svbd__wallet-amt">₹142.50</div>
@@ -321,13 +381,14 @@ export default function BuyerDashboard() {
           </div>
         </aside>
 
+        {/* ════ MAIN ════ */}
         <div className="svbd__main">
           <header className="svbd__topbar">
             <div className="svbd__search-wrap">
               <span className="svbd__search-ic">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               </span>
-              <input className="svbd__search" placeholder="Search fresh produce, vendors, or recipes..." value={search} onChange={e=>setSearch(e.target.value)}/>
+              <input className="svbd__search" placeholder="Search fresh produce, vendors..." value={search} onChange={e => setSearch(e.target.value)}/>
             </div>
             <div className="svbd__topbar-right">
               <button className="svbd__notif-btn">
@@ -339,6 +400,7 @@ export default function BuyerDashboard() {
           </header>
 
           <main className="svbd__content">
+            {/* Welcome */}
             <div className="svbd__welcome-row">
               <div>
                 <h1 className="svbd__welcome-h">Welcome back, Alex! 👋</h1>
@@ -348,7 +410,8 @@ export default function BuyerDashboard() {
 
             <div className="svbd__two-col">
               <div className="svbd__left">
-                {/* Recommended */}
+
+                {/* Products from Marketplace */}
                 <div className="svbd__products-section">
                   <div className="svbd__sec-hd">
                     <div className="svbd__sec-title">
@@ -408,7 +471,7 @@ export default function BuyerDashboard() {
                   </div>
                 </div>
 
-                {/* Orders */}
+                {/* Recent Orders */}
                 <div className="svbd__orders-section">
                   <div className="svbd__sec-hd">
                     <div className="svbd__sec-title">
@@ -442,6 +505,7 @@ export default function BuyerDashboard() {
                 </div>
               </div>
 
+              {/* RIGHT */}
               <div className="svbd__right">
                 <div className="svbd__delivery-card">
                   <div className="svbd__delivery-hd">
@@ -500,7 +564,8 @@ export default function BuyerDashboard() {
         </div>
       </div>
 
-      {toast && <Toast msg={toast} onDone={()=>setToast(null)}/>}
+      {toast && <Toast msg={toast} onDone={() => setToast(null)}/>}
+      {showImpact && <ImpactModal onClose={() => setShowImpact(false)} />}
     </>
   );
-} 
+}
