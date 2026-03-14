@@ -150,6 +150,14 @@ const INITIAL_REQUESTS = [
   },
 ];
 
+const readLiveBulkRequests = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem("sv_bulk_requests") || "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw;
+  } catch { return []; }
+};
+
 const TABS = [
   { key: "pending",     label: "Pending",     count: 4    },
   { key: "negotiating", label: "Negotiating", count: 2    },
@@ -380,7 +388,18 @@ const BulkRequests = () => {
   }, []);
   const farmerInitials = farmerName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
-  const [requests, setRequests]         = useState(INITIAL_REQUESTS);
+  const buildRequests = () => {
+    const live = readLiveBulkRequests();
+    return live.length ? [...live, ...INITIAL_REQUESTS] : INITIAL_REQUESTS;
+  };
+  const [requests, setRequests] = useState(buildRequests);
+
+  useEffect(() => {
+    setRequests(buildRequests());
+    const onFocus = () => setRequests(buildRequests());
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
   const [activeTab, setTab]             = useState("pending");
   const [searchVal, setSearch]          = useState("");
   const [negotiateTarget, setNego]      = useState(null);
@@ -406,15 +425,19 @@ const BulkRequests = () => {
   }, [requests, activeTab, searchVal]);
 
   const handleAccept = (id) => {
-    setRequests((prev) =>
-      prev.map((r) => r.id === id ? { ...r, status: "accepted", tab: "accepted" } : r)
-    );
+    setRequests((prev) => {
+      const updated = prev.map((r) => r.id === id ? { ...r, status: "accepted", tab: "accepted" } : r);
+      // persist live entries
+      const live = updated.filter(r => readLiveBulkRequests().some(l => l.id === r.id));
+      if (live.length) { try { localStorage.setItem("sv_bulk_requests", JSON.stringify(live)); } catch {} }
+      return updated;
+    });
     showToast("Request accepted successfully!", "success");
   };
 
   const handleNegotiateSubmit = (id, form) => {
-    setRequests((prev) =>
-      prev.map((r) => r.id === id
+    setRequests((prev) => {
+      const updated = prev.map((r) => r.id === id
         ? { ...r, status: "negotiating", tab: "negotiating",
             timeAgo: "Counter-offer sent just now",
             ...(form.counterPrice && { price: form.counterPrice }),
@@ -422,8 +445,11 @@ const BulkRequests = () => {
             ...(form.logistics    && { logistics: form.logistics }),
           }
         : r
-      )
-    );
+      );
+      const live = updated.filter(r => readLiveBulkRequests().some(l => l.id === r.id));
+      if (live.length) { try { localStorage.setItem("sv_bulk_requests", JSON.stringify(live)); } catch {} }
+      return updated;
+    });
     showToast("Counter-offer sent to " + requests.find((r) => r.id === id)?.requester, "info");
   };
 

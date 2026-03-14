@@ -54,8 +54,9 @@ export default function BuyerBulkOrder() {
   const [variety,   setVariety]   = useState("");
   const [quality,   setQuality]   = useState("premium");
   const [notes,     setNotes]     = useState("");
-  const [qty,       setQty]       = useState(100);
-  const [unit,      setUnit]      = useState("kg");
+  const [qty,          setQty]          = useState(100);
+  const [unit,         setUnit]         = useState("kg");
+  const [pricePerUnit, setPricePerUnit] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate,   setEndDate]   = useState("");
   const [frequency, setFrequency] = useState("weekly");
@@ -73,12 +74,82 @@ export default function BuyerBulkOrder() {
   };
 
   const handleSubmit = () => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const orderId = "#BLK-" + Math.floor(10000 + Math.random() * 90000);
+
+    // Shape for sv_orders (Dashboard + MyOrders)
+    const orderEntry = {
+      id:           orderId,
+      name:         `Bulk: ${variety || category}`,
+      emoji:        "📦",
+      date:         dateStr,
+      deliveryDate: startDate || "—",
+      status:       "processing",
+      items:        1,
+      price:        total,
+      address:      street ? `${street}, ${city} ${pin}`.trim() : "—",
+      trackStep:    1,
+      products: [
+        {
+          emoji: "📦",
+          name:  variety || category,
+          qty:   `${qty} ${unit}`,
+          price: priceNum,
+        },
+      ],
+    };
+
+    // Shape for sv_bulk_requests (BulkRequests farmer page)
+    const bulkEntry = {
+      id:            Date.now(),
+      requester:     "You (Buyer)",
+      type:          "buyer",
+      typeLabel:     "Buyer",
+      product:       variety || category,
+      emoji:         "📦",
+      grade:         selQuality?.title || "—",
+      quantity:      `${qty} ${unit}`,
+      price:         priceNum > 0 ? `₹${priceNum.toFixed(2)}/${unit}` : "—",
+      frequency:     frequency.charAt(0).toUpperCase() + frequency.slice(1),
+      logistics:     street ? `${street}, ${city}` : "—",
+      deadline:      startDate || "—",
+      deadlineUrgent: false,
+      timeAgo:       "Requested just now",
+      tab:           "pending",
+      status:        "pending",
+      orderId:       orderId,
+      vendor:        VENDORS.find(v => v.id === vendor)?.name || "—",
+    };
+
+    // Save to sv_orders
+    try {
+      const existing = JSON.parse(localStorage.getItem("sv_orders") || "[]");
+      localStorage.setItem("sv_orders", JSON.stringify([orderEntry, ...existing]));
+    } catch {}
+
+    // Save to sv_bulk_requests
+    try {
+      const existingBulk = JSON.parse(localStorage.getItem("sv_bulk_requests") || "[]");
+      localStorage.setItem("sv_bulk_requests", JSON.stringify([bulkEntry, ...existingBulk]));
+    } catch {}
+
     setToast(true);
     setTimeout(() => { setToast(false); navigate("/buyer/myorders"); }, 2500);
   };
 
   const selVendor  = VENDORS.find(v => v.id === vendor);
   const selQuality = QUALITY.find(q => q.id === quality);
+
+  // ─── Fee calculations — mirrors cart: price(per unit) * qty ─────────────
+  const priceNum      = parseFloat(pricePerUnit) || 0;
+  const subtotal      = parseFloat((priceNum * qty).toFixed(2));
+  const shipping      = subtotal >= 50 ? 0 : 29;
+  const fuelSurcharge = parseFloat((subtotal * 0.015).toFixed(2));
+  const handling      = 10;
+  const commission    = parseFloat((subtotal * 0.02).toFixed(2));
+  const tax           = parseFloat((subtotal * 0.05).toFixed(2));
+  const total         = parseFloat((subtotal + shipping + fuelSurcharge + handling + commission + tax).toFixed(2));
 
   return (
     <div className="sv-bo__app">
@@ -94,7 +165,7 @@ export default function BuyerBulkOrder() {
         <nav className="sv-bo__nav">
           {NAV.map(({ id, path, label, badge }) => (
             <button key={id}
-              className={`sv-bo__nav-item${id === "bulk" ? " sv-bo__nav-item--active" : ""}`}
+              className={"sv-bo__nav-item" + (id === "bulk" ? " sv-bo__nav-item--active" : "")}
               onClick={() => navigate(path)}>
               <Svg size={20}>{NAV_ICONS[id]}</Svg>
               {label}
@@ -138,7 +209,7 @@ export default function BuyerBulkOrder() {
         <div className="sv-bo__stepper">
           {STEPS.map((label, i) => (
             <button key={label}
-              className={`sv-bo__step${i === step ? " sv-bo__step--active" : i < step ? " sv-bo__step--done" : ""}`}
+              className={"sv-bo__step" + (i === step ? " sv-bo__step--active" : i < step ? " sv-bo__step--done" : "")}
               onClick={() => i < step && setStep(i)}>
               <span className="sv-bo__step-num">
                 {i < step ? <Svg size={12}><polyline points="20 6 9 17 4 12"/></Svg> : i + 1}
@@ -174,7 +245,7 @@ export default function BuyerBulkOrder() {
               <div className="sv-bo__quality-grid">
                 {QUALITY.map(q => (
                   <div key={q.id}
-                    className={`sv-bo__quality-card${quality === q.id ? " sv-bo__quality-card--selected" : ""}`}
+                    className={"sv-bo__quality-card" + (quality === q.id ? " sv-bo__quality-card--selected" : "")}
                     onClick={() => setQuality(q.id)}>
                     <div className="sv-bo__quality-title">{q.title}</div>
                     <div className="sv-bo__quality-desc">{q.desc}</div>
@@ -206,7 +277,7 @@ export default function BuyerBulkOrder() {
                 <div className="sv-bo__vendors-grid">
                   {VENDORS.map(v => (
                     <div key={v.id}
-                      className={`sv-bo__vendor-card${vendor === v.id ? " sv-bo__vendor-card--selected" : ""}`}
+                      className={"sv-bo__vendor-card" + (vendor === v.id ? " sv-bo__vendor-card--selected" : "")}
                       onClick={() => setVendor(v.id)}>
                       <div className="sv-bo__vendor-avatar">{v.emoji}</div>
                       <div>
@@ -224,8 +295,8 @@ export default function BuyerBulkOrder() {
 
             <div className="sv-bo__form-footer">
               <span />
-              <button className="sv-bo__btn sv-bo__btn--primary"
-                style={{ opacity: canNext() ? 1 : 0.5, cursor: canNext() ? "pointer" : "not-allowed" }}
+              <button className={"sv-bo__btn sv-bo__btn--primary" + (!canNext() ? " sv-bo__btn--disabled" : "")}
+                disabled={!canNext()}
                 onClick={() => canNext() && setStep(1)}>
                 Next: Quantity & Timeline
                 <Svg size={16}><polyline points="9 18 15 12 9 6"/></Svg>
@@ -240,6 +311,8 @@ export default function BuyerBulkOrder() {
             <div className="sv-bo__section">
               <div className="sv-bo__section-heading">Order Quantity</div>
               <div className="sv-bo__form-grid">
+
+                {/* Quantity + unit stepper */}
                 <div className="sv-bo__field">
                   <label className="sv-bo__label">Quantity</label>
                   <div className="sv-bo__qty-row">
@@ -257,6 +330,39 @@ export default function BuyerBulkOrder() {
                     </select>
                   </div>
                 </div>
+
+                {/* Price per unit — live total updates as qty changes */}
+                <div className="sv-bo__field">
+                  <label className="sv-bo__label">Price per {unit}</label>
+                  <div className="sv-bo__price-wrap">
+                    <span className="sv-bo__price-prefix">₹</span>
+                    <input
+                      className="sv-bo__input sv-bo__input--price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="e.g. 45.00"
+                      value={pricePerUnit}
+                      onChange={e => setPricePerUnit(e.target.value)}
+                    />
+                  </div>
+                  {/* Live price display — mirrors cart's item price + line total */}
+                  {priceNum > 0 && (
+                    <div className="sv-bo__price-preview">
+                      <span className="sv-bo__price-preview-rate">
+                        ₹{priceNum.toFixed(2)} / {unit}
+                      </span>
+                      <span className="sv-bo__price-preview-total">
+                        ₹{(priceNum * qty).toFixed(2)}
+                      </span>
+                      <span className="sv-bo__price-preview-sub">
+                        for {qty} {unit}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Delivery Frequency */}
                 <div className="sv-bo__field">
                   <label className="sv-bo__label">Delivery Frequency</label>
                   <select className="sv-bo__select" value={frequency} onChange={e => setFrequency(e.target.value)}>
@@ -266,6 +372,7 @@ export default function BuyerBulkOrder() {
                     <option value="monthly">Monthly</option>
                   </select>
                 </div>
+
               </div>
             </div>
 
@@ -277,7 +384,7 @@ export default function BuyerBulkOrder() {
                   <input type="date" className="sv-bo__input" value={startDate} onChange={e => setStartDate(e.target.value)} />
                 </div>
                 <div className="sv-bo__field">
-                  <label className="sv-bo__label">End Date <span style={{color:"#9ca3af",fontWeight:600}}>(optional)</span></label>
+                  <label className="sv-bo__label">End Date (optional)</label>
                   <input type="date" className="sv-bo__input" value={endDate} onChange={e => setEndDate(e.target.value)} />
                 </div>
               </div>
@@ -306,8 +413,8 @@ export default function BuyerBulkOrder() {
                 <Svg size={16}><polyline points="15 18 9 12 15 6"/></Svg>
                 Back
               </button>
-              <button className="sv-bo__btn sv-bo__btn--primary"
-                style={{ opacity: canNext() ? 1 : 0.5, cursor: canNext() ? "pointer" : "not-allowed" }}
+              <button className={"sv-bo__btn sv-bo__btn--primary" + (!canNext() ? " sv-bo__btn--disabled" : "")}
+                disabled={!canNext()}
                 onClick={() => canNext() && setStep(2)}>
                 Review Request
                 <Svg size={16}><polyline points="9 18 15 12 9 6"/></Svg>
@@ -326,7 +433,6 @@ export default function BuyerBulkOrder() {
                   ["Category",         category || "—"],
                   ["Specific Variety",  variety  || "—"],
                   ["Quality Grade",     selQuality?.title || "—"],
-                  ["Quantity",         `${qty} ${unit}`],
                   ["Frequency",        frequency.charAt(0).toUpperCase() + frequency.slice(1)],
                   ["Start Date",       startDate || "—"],
                   ["End Date",         endDate   || "—"],
@@ -339,9 +445,59 @@ export default function BuyerBulkOrder() {
                     <span className="sv-bo__review-val">{v}</span>
                   </div>
                 ))}
+
+                {/* Cart-style item price block */}
+                <div className="sv-bo__review-item">
+                  <div className="sv-bo__review-item-row">
+                    <span className="sv-bo__review-key">Quantity</span>
+                    <span className="sv-bo__review-val">{qty} {unit}</span>
+                  </div>
+                  <div className="sv-bo__review-item-row">
+                    <span className="sv-bo__review-key">Price per {unit}</span>
+                    <span className="sv-bo__review-item-price">
+                      {priceNum > 0 ? `₹${priceNum.toFixed(2)} / ${unit}` : "—"}
+                    </span>
+                  </div>
+                  {priceNum > 0 && (
+                    <div className="sv-bo__review-item-total">
+                      <span className="sv-bo__review-item-total-val">₹{(priceNum * qty).toFixed(2)}</span>
+                      <span className="sv-bo__review-item-total-sub">for {qty} {unit}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="sv-bo__review-charges">
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">Subtotal</span>
+                    <span className="sv-bo__review-charges-val">₹{subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">Delivery Charges</span>
+                    <span className={shipping === 0 ? "sv-bo__review-charges-free" : "sv-bo__review-charges-val"}>
+                      {shipping === 0 ? "Free" : `₹${shipping.toFixed(2)}`}
+                    </span>
+                  </div>
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">Fuel Surcharge (1.5%)</span>
+                    <span className="sv-bo__review-charges-val">₹{fuelSurcharge.toFixed(2)}</span>
+                  </div>
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">Handling & Packaging</span>
+                    <span className="sv-bo__review-charges-val">₹{handling.toFixed(2)}</span>
+                  </div>
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">Platform Fee (2%)</span>
+                    <span className="sv-bo__review-charges-val">₹{commission.toFixed(2)}</span>
+                  </div>
+                  <div className="sv-bo__review-charges-row">
+                    <span className="sv-bo__review-charges-label">GST (5%)</span>
+                    <span className="sv-bo__review-charges-val">₹{tax.toFixed(2)}</span>
+                  </div>
+                </div>
+
                 <div className="sv-bo__review-total">
-                  <span className="sv-bo__review-total-label">Estimated Quote</span>
-                  <span className="sv-bo__review-total-val">~${(qty * 0.85).toFixed(2)}</span>
+                  <span className="sv-bo__review-total-label">Estimated Total</span>
+                  <span className="sv-bo__review-total-val">₹{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>

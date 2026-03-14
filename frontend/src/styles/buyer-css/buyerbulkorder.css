@@ -341,6 +341,85 @@
 /* ── DATE GRID ── */
 .sv-bo__date-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
+/* ── REVIEW ITEM PRICE BLOCK (mirrors cart svbc__item-price / svbc__item-line-total) ── */
+.sv-bo__review-item {
+  border-top: 1px solid #f3f4f6;
+  padding: 14px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sv-bo__review-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+}
+.sv-bo__review-item-price {
+  font-size: 14px;
+  font-weight: 800;
+  color: #5bc424;
+}
+.sv-bo__review-item-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-top: 2px;
+}
+.sv-bo__review-item-total-val {
+  font-size: 18px;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+.sv-bo__review-item-total-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ── PRICE FIELD PREVIEW (mirrors cart item line total display) ── */
+.sv-bo__price-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sv-bo__price-prefix {
+  position: absolute;
+  left: 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #374151;
+  pointer-events: none;
+  z-index: 1;
+}
+.sv-bo__input--price {
+  padding-left: 28px !important;
+}
+.sv-bo__price-preview {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* mirrors cart svbc__item-price */
+.sv-bo__price-preview-rate {
+  font-size: 13px;
+  font-weight: 800;
+  color: #5bc424;
+}
+/* mirrors cart svbc__item-line-total value */
+.sv-bo__price-preview-total {
+  font-size: 16px;
+  font-weight: 900;
+  color: #1a1a1a;
+}
+/* mirrors cart svbc__item-line-qty */
+.sv-bo__price-preview-sub {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
 /* ── VENDORS ── */
 .sv-bo__vendors-card {
   background: #fff;
@@ -402,6 +481,35 @@
 .sv-bo__review-row:last-child { border-bottom: none; }
 .sv-bo__review-key { font-weight: 700; color: #6b7280; }
 .sv-bo__review-val { font-weight: 800; color: #1a1a1a; }
+
+/* ── REVIEW CHARGES BLOCK (mirrors cart fee breakdown) ── */
+.sv-bo__review-charges {
+  margin-top: 8px;
+  border-top: 1.5px solid #e5e7eb;
+  padding-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sv-bo__review-charges-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+}
+.sv-bo__review-charges-label {
+  font-weight: 700;
+  color: #6b7280;
+}
+.sv-bo__review-charges-val {
+  font-weight: 800;
+  color: #1a1a1a;
+}
+.sv-bo__review-charges-free {
+  font-weight: 800;
+  color: #5bc424;
+}
+
 .sv-bo__review-total {
   margin-top: 16px;
   padding: 18px 20px;
@@ -430,6 +538,7 @@
 }
 .sv-bo__btn--primary { background: #5bc424; color: #fff; }
 .sv-bo__btn--primary:hover { background: #4aaa1c; transform: translateY(-1px); }
+.sv-bo__btn--disabled { opacity: 0.5; cursor: not-allowed; }
 .sv-bo__btn--outline { background: transparent; border: 2px solid #e5e7eb; color: #374151; }
 .sv-bo__btn--outline:hover { background: #f9fafb; }
 .sv-bo__btn--submit { background: #1a1a1a; color: #fff; }

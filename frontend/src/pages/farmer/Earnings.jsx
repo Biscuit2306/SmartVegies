@@ -18,21 +18,29 @@ const CHART_DATA = {
   },
 };
 
-// ── Transaction Data ──────────────────────────────────────────
-const ALL_TRANSACTIONS = [
-  { id: "#ORD-90214", date: "Jul 02, 2024", crop: "Organic Tomatoes",  qty: "500 kg",  amount: 1250.00, status: "completed" },
-  { id: "#ORD-88721", date: "Jun 28, 2024", crop: "Sweet Corn",        qty: "1,200 kg",amount: 3480.00, status: "completed" },
-  { id: "#ORD-87540", date: "Jun 21, 2024", crop: "Baby Spinach",      qty: "80 kg",   amount: 440.00,  status: "completed" },
-  { id: "#ORD-86330", date: "Jun 15, 2024", crop: "Green Broccoli",    qty: "200 kg",  amount: 680.00,  status: "completed" },
-  { id: "#ORD-85210", date: "Jun 10, 2024", crop: "Red Onions",        qty: "350 kg",  amount: 525.00,  status: "pending"   },
-  { id: "#ORD-84190", date: "Jun 04, 2024", crop: "Nantes Carrots",    qty: "600 kg",  amount: 1110.00, status: "completed" },
-  { id: "#ORD-83072", date: "May 28, 2024", crop: "Cherry Tomatoes",   qty: "120 kg",  amount: 840.00,  status: "completed" },
-  { id: "#ORD-82010", date: "May 20, 2024", crop: "Organic Potatoes",  qty: "800 kg",  amount: 960.00,  status: "failed"    },
-  { id: "#ORD-80900", date: "May 14, 2024", crop: "Mixed Greens",      qty: "150 kg",  amount: 825.00,  status: "completed" },
-  { id: "#ORD-79811", date: "May 07, 2024", crop: "Zucchini",          qty: "90 kg",   amount: 315.00,  status: "pending"   },
-  { id: "#ORD-78700", date: "Apr 30, 2024", crop: "Organic Tomatoes",  qty: "400 kg",  amount: 1000.00, status: "completed" },
-  { id: "#ORD-77650", date: "Apr 22, 2024", crop: "Sweet Corn",        qty: "700 kg",  amount: 2030.00, status: "completed" },
+// ── Static Demo Transactions ──────────────────────────────────
+const DEMO_TRANSACTIONS = [
+  { id: "#ORD-90214", date: "Jul 02, 2024", crop: "Organic Tomatoes",  qty: "500 kg",   amount: 1250.00, status: "completed" },
+  { id: "#ORD-88721", date: "Jun 28, 2024", crop: "Sweet Corn",        qty: "1,200 kg", amount: 3480.00, status: "completed" },
+  { id: "#ORD-87540", date: "Jun 21, 2024", crop: "Baby Spinach",      qty: "80 kg",    amount: 440.00,  status: "completed" },
+  { id: "#ORD-86330", date: "Jun 15, 2024", crop: "Green Broccoli",    qty: "200 kg",   amount: 680.00,  status: "completed" },
+  { id: "#ORD-85210", date: "Jun 10, 2024", crop: "Red Onions",        qty: "350 kg",   amount: 525.00,  status: "pending"   },
+  { id: "#ORD-84190", date: "Jun 04, 2024", crop: "Nantes Carrots",    qty: "600 kg",   amount: 1110.00, status: "completed" },
+  { id: "#ORD-83072", date: "May 28, 2024", crop: "Cherry Tomatoes",   qty: "120 kg",   amount: 840.00,  status: "completed" },
+  { id: "#ORD-82010", date: "May 20, 2024", crop: "Organic Potatoes",  qty: "800 kg",   amount: 960.00,  status: "failed"    },
+  { id: "#ORD-80900", date: "May 14, 2024", crop: "Mixed Greens",      qty: "150 kg",   amount: 825.00,  status: "completed" },
+  { id: "#ORD-79811", date: "May 07, 2024", crop: "Zucchini",          qty: "90 kg",    amount: 315.00,  status: "pending"   },
+  { id: "#ORD-78700", date: "Apr 30, 2024", crop: "Organic Tomatoes",  qty: "400 kg",   amount: 1000.00, status: "completed" },
+  { id: "#ORD-77650", date: "Apr 22, 2024", crop: "Sweet Corn",        qty: "700 kg",   amount: 2030.00, status: "completed" },
 ];
+
+// ── localStorage helpers ──────────────────────────────────────
+const readFarmerOrders = () => {
+  try {
+    const raw = JSON.parse(localStorage.getItem("sv_farmer_orders") || "[]");
+    return Array.isArray(raw) ? raw : [];
+  } catch { return []; }
+};
 
 const ROWS_PER_PAGE = 6;
 
@@ -46,10 +54,20 @@ const FILTER_OPTIONS = ["All", "Completed", "Pending", "Failed"];
 const PERIODS = ["Last 3 Months", "Last 6 Months", "This Year"];
 
 // ── SVG Chart ─────────────────────────────────────────────────
-function EarningsChart({ period }) {
-  const { labels, values } = CHART_DATA[period];
+function EarningsChart({ period, liveTotal }) {
+  const base = CHART_DATA[period];
   const [tooltip, setTooltip] = useState(null);
 
+  // Bump the last bar by live order revenue so chart reacts to new orders
+  const values = useMemo(() => {
+    const vals = [...base.values];
+    if (liveTotal > 0) {
+      vals[vals.length - 1] = vals[vals.length - 1] + liveTotal;
+    }
+    return vals;
+  }, [base.values, liveTotal]);
+
+  const labels = base.labels;
   const W = 600, H = 200, PAD = 16;
   const minV = Math.min(...values) * 0.85;
   const maxV = Math.max(...values) * 1.05;
@@ -90,10 +108,10 @@ function EarningsChart({ period }) {
           <g>
             <line x1={tooltip.x} y1={0} x2={tooltip.x} y2={H}
               stroke="#4a8e38" strokeWidth="1" strokeDasharray="4 3" opacity="0.5" />
-            <rect x={tooltip.x - 40} y={tooltip.y - 34} width={80} height={26} rx={7} fill="#1a3a1a" />
+            <rect x={tooltip.x - 44} y={tooltip.y - 34} width={88} height={26} rx={7} fill="#1a3a1a" />
             <text x={tooltip.x} y={tooltip.y - 16} textAnchor="middle"
               fill="white" fontSize="12" fontFamily="Sora, sans-serif" fontWeight="700">
-              ${values[tooltip.i].toLocaleString()}
+              ₹{values[tooltip.i].toLocaleString("en-IN")}
             </text>
           </g>
         )}
@@ -114,6 +132,53 @@ const Earnings = () => {
   }, []);
   const farmerInitials = farmerName.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 
+  // ── Live orders from localStorage ──────────────────────────
+  const [liveOrders, setLiveOrders] = useState(readFarmerOrders);
+
+  useEffect(() => {
+    const sync = () => setLiveOrders(readFarmerOrders());
+    sync();
+    window.addEventListener("focus", sync);
+    return () => window.removeEventListener("focus", sync);
+  }, []);
+
+  // Build live transactions from sv_farmer_orders
+  const liveTransactions = useMemo(() => liveOrders.map(o => ({
+    id:     o.id,
+    date:   o.date,
+    crop:   o.items || o.customer || "Order",
+    qty:    "—",
+    amount: o.amount ?? parseFloat((o.total || "0").replace(/[^0-9.]/g, "")),
+    status: o.status === "processing" ? "pending" : (o.status || "pending"),
+  })), [liveOrders]);
+
+  // Merge live + demo transactions (live first, deduplicated by id)
+  const allTransactions = useMemo(() => {
+    const liveIds = new Set(liveTransactions.map(t => t.id));
+    return [...liveTransactions, ...DEMO_TRANSACTIONS.filter(t => !liveIds.has(t.id))];
+  }, [liveTransactions]);
+
+  // ── Computed summary stats ──────────────────────────────────
+  const liveRevenue = useMemo(() =>
+    liveOrders.reduce((sum, o) => {
+      const amt = o.amount ?? parseFloat((o.total || "0").replace(/[^0-9.]/g, ""));
+      return sum + (isNaN(amt) ? 0 : amt);
+    }, 0),
+  [liveOrders]);
+
+  const demoCompleted = DEMO_TRANSACTIONS.filter(t => t.status === "completed").reduce((s, t) => s + t.amount, 0);
+  const totalEarnings = liveRevenue + demoCompleted;
+
+  const pendingAmount = useMemo(() =>
+    allTransactions.filter(t => t.status === "pending").reduce((s, t) => s + t.amount, 0),
+  [allTransactions]);
+
+  const lastLive = liveOrders[0];
+  const lastPayoutAmt = lastLive
+    ? (lastLive.amount ?? parseFloat((lastLive.total || "0").replace(/[^0-9.]/g, "")))
+    : 2100.00;
+  const lastPayoutDate = lastLive ? lastLive.date : "Jun 30, 2024";
+
   const [period, setPeriod]         = useState("Last 6 Months");
   const [filterOpen, setFilterOpen] = useState(false);
   const [activeFilter, setFilter]   = useState("All");
@@ -122,7 +187,6 @@ const Earnings = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const filterRef = useRef(null);
 
-  // Close filter dropdown on outside click
   useEffect(() => {
     const h = (e) => { if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false); };
     document.addEventListener("mousedown", h);
@@ -130,9 +194,9 @@ const Earnings = () => {
   }, []);
 
   const filtered = useMemo(() => {
-    if (activeFilter === "All") return ALL_TRANSACTIONS;
-    return ALL_TRANSACTIONS.filter((t) => t.status === activeFilter.toLowerCase());
-  }, [activeFilter]);
+    if (activeFilter === "All") return allTransactions;
+    return allTransactions.filter((t) => t.status === activeFilter.toLowerCase());
+  }, [activeFilter, allTransactions]);
 
   const totalPages = Math.ceil(filtered.length / ROWS_PER_PAGE);
   const paginated  = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
@@ -141,12 +205,12 @@ const Earnings = () => {
 
   const handleExport = () => {
     const headers = ["Transaction ID", "Date", "Crop Type", "Quantity", "Amount", "Status"];
-    const rows = ALL_TRANSACTIONS.map((t) => [
+    const rows = allTransactions.map((t) => [
       t.id,
       t.date,
       t.crop,
       t.qty,
-      `$${t.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
+      `₹${t.amount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
       t.status.charAt(0).toUpperCase() + t.status.slice(1),
     ]);
     const csv = [headers, ...rows]
@@ -164,6 +228,8 @@ const Earnings = () => {
   };
 
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+  const fmtINR = (n) => `₹${n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="sve__layout">
@@ -243,13 +309,16 @@ const Earnings = () => {
             <div className="sve__summary-card">
               <div className="sve__summary-card-left">
                 <div className="sve__summary-card-label">Total Earnings</div>
-                <div className="sve__summary-card-value">$12,450.00</div>
+                <div className="sve__summary-card-value">{fmtINR(totalEarnings)}</div>
                 <div className="sve__summary-card-meta">
                   <svg className="sve__meta-icon" viewBox="0 0 24 24" fill="none" stroke="#3d7a2e" strokeWidth="2.5">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                     <polyline points="17 6 23 6 23 12" />
                   </svg>
-                  <span className="sve__meta-positive">15.2%</span>
+                  {liveOrders.length > 0
+                    ? <span className="sve__meta-positive">{liveOrders.length} live order{liveOrders.length !== 1 ? "s" : ""}</span>
+                    : <span className="sve__meta-positive">15.2%</span>
+                  }
                   <span>vs. previous month</span>
                 </div>
               </div>
@@ -265,7 +334,7 @@ const Earnings = () => {
             <div className="sve__summary-card">
               <div className="sve__summary-card-left">
                 <div className="sve__summary-card-label">Pending Payouts</div>
-                <div className="sve__summary-card-value">$1,280.50</div>
+                <div className="sve__summary-card-value">{fmtINR(pendingAmount)}</div>
                 <div className="sve__summary-card-meta">
                   <svg className="sve__meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -288,13 +357,13 @@ const Earnings = () => {
             <div className="sve__summary-card">
               <div className="sve__summary-card-left">
                 <div className="sve__summary-card-label">Last Payout</div>
-                <div className="sve__summary-card-value">$2,100.00</div>
+                <div className="sve__summary-card-value">{fmtINR(lastPayoutAmt)}</div>
                 <div className="sve__summary-card-meta">
                   <svg className="sve__meta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
                     <polyline points="22 4 12 14.01 9 11.01" />
                   </svg>
-                  <span>Processed on June 30, 2024</span>
+                  <span>Processed on {lastPayoutDate}</span>
                 </div>
               </div>
               <div className="sve__summary-card-icon sve__summary-card-icon--blue">
@@ -328,7 +397,7 @@ const Earnings = () => {
                 </div>
               </div>
 
-              <EarningsChart period={period} />
+              <EarningsChart period={period} liveTotal={liveRevenue} />
 
               <div className="sve__chart-months">
                 {CHART_DATA[period].labels.map((m) => (
@@ -341,7 +410,7 @@ const Earnings = () => {
             <div className="sve__categories-card">
               <div className="sve__categories-title">Top Categories</div>
               <div className="sve__categories-list">
-                {CATEGORIES.map((cat, idx) => (
+                {CATEGORIES.map((cat) => (
                   <div key={cat.name} className="sve__category-item">
                     <div className="sve__category-header">
                       <span className="sve__category-name">{cat.name}</span>
@@ -407,7 +476,7 @@ const Earnings = () => {
                     <td><span className="sve__txn-date">{txn.date}</span></td>
                     <td><span className="sve__txn-crop">{txn.crop}</span></td>
                     <td><span className="sve__txn-qty">{txn.qty}</span></td>
-                    <td><span className="sve__txn-amount">${txn.amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span></td>
+                    <td><span className="sve__txn-amount">{fmtINR(txn.amount)}</span></td>
                     <td>
                       <span className={`sve__txn-status sve__txn-status--${txn.status}`}>
                         <span className="sve__txn-status-dot" />

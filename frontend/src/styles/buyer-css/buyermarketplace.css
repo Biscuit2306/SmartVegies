@@ -319,6 +319,7 @@
   justify-content: center;
   color: #4a7a4a;
   transition: all 0.18s;
+  padding: 0;
 }
 
 .svbm__notif-btn:hover {
@@ -671,4 +672,344 @@
 @media (max-width: 600px)  {
   .svbm__content { padding: 14px; }
   .svbm__grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ============================================================
+   FARMER CROP CARDS — new additions only, svbm__ namespace
+   Nothing above this line has been changed.
+   ============================================================ */
+
+/* "farmer" badge — dark green to match organic style */
+.svbm__badge--farmer {
+  background: #2d6622;
+  color: white;
+}
+
+/* "Fresh from farm" inline tag in rating row */
+.svbm__farmer-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a8e38;
+}
+
+/* View Details toggle button */
+.svbm__crop-detail-wrap {
+  margin-top: 10px;
+  border-top: 1px solid #eaf0e0;
+  padding-top: 8px;
+}
+
+/* Detail panel */
+.svbm__crop-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  background: #f5fcf3;
+  border: 1.5px solid #ddeeda;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.svbm__crop-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.svbm__crop-detail-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #7aaa7a;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.svbm__crop-detail-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1a3a1a;
+  text-align: right;
+}
+
+/* Status pill inside detail panel */
+.svbm__crop-status-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.svbm__crop-status-pill--growing   { background: #e8f5e4; color: #3d7a2e; }
+.svbm__crop-status-pill--harvested { background: #e8f0fb; color: #3d72d4; }
+.svbm__crop-status-pill--seedling  { background: #fef5e7; color: #c07a20; }
+.svbm__crop-status-pill--issue     { background: #fef0f0; color: #c04040; }
+
+/* Growth progress inside detail panel */
+.svbm__crop-detail-progress {
+  margin-top: 4px;
+}
+
+.svbm__crop-detail-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.svbm__crop-detail-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3cba22;
+}
+
+.svbm__crop-detail-track {
+  width: 100%;
+  height: 5px;
+  background: #ddeeda;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.svbm__crop-detail-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #3cba22, #7dce6a);
+  transition: width 0.5s ease;
+}
+
+/* Full-width Add to Cart button for farmer cards */
+.svbm__add-btn--full {
+  width: 100%;
+  height: 38px;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+
+/* View Details as form-style outlined button */
+.svbm__crop-detail-toggle {
+  width: 100%;
+  padding: 9px 0;
+  border: 1.5px solid #ddeeda;
+  border-radius: 10px;
+  background: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #3cba22;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.svbm__crop-detail-toggle:hover {
+  border-color: #3cba22;
+  background: #f5fff3;
+  color: #2a8a14;
+}
+
+/* Empty state */
+.svbm__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 1.5px dashed #d0dccb;
+  gap: 10px;
+}
+
+.svbm__empty-icon { font-size: 52px; }
+
+.svbm__empty-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #2c4a2c;
+}
+
+.svbm__empty-sub {
+  font-size: 13px;
+  color: #9aaa9a;
+  font-weight: 600;
+}
+
+/* ── Crop Detail Modal ──────────────────────────────── */
+.svbm__modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 26, 10, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: svbm-fade-in 0.2s ease;
+}
+
+.svbm__modal {
+  background: white;
+  border-radius: 20px;
+  width: 460px;
+  max-width: 94vw;
+  padding: 28px 28px 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.20);
+  animation: svbm-slide-up 0.25s ease;
+}
+
+.svbm__modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.svbm__modal-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.svbm__modal-emoji {
+  font-size: 46px;
+  line-height: 1;
+  background: linear-gradient(135deg, #f0f9ec, #e0f0d8);
+  width: 68px;
+  height: 68px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.svbm__modal-name {
+  font-size: 17px;
+  font-weight: 900;
+  color: #1a3a1a;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.svbm__modal-variety {
+  font-size: 13px;
+  color: #7a9a7a;
+  font-weight: 600;
+}
+
+.svbm__modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1.5px solid #e4f0e0;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7a9a7a;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.svbm__modal-close:hover {
+  border-color: #e03030;
+  color: #e03030;
+  background: #fef0f0;
+}
+
+.svbm__modal-close svg { width: 14px; height: 14px; }
+
+.svbm__modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.svbm__modal-cell {
+  background: #f4faf2;
+  border: 1.5px solid #e4f0e0;
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+
+.svbm__modal-cell--full {
+  grid-column: 1 / -1;
+}
+
+.svbm__modal-cell-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #7aaa7a;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 4px;
+}
+
+.svbm__modal-cell-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a3a1a;
+}
+
+.svbm__modal-progress {
+  margin-bottom: 22px;
+}
+
+.svbm__modal-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 7px;
+}
+
+.svbm__modal-progress-pct {
+  font-size: 12px;
+  font-weight: 800;
+  color: #3cba22;
+}
+
+.svbm__modal-close-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 11px;
+  border: 1.5px solid #ddeeda;
+  background: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #4a7a4a;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.svbm__modal-close-btn:hover {
+  border-color: #3cba22;
+  background: #f5fff3;
+  color: #2a8a14;
+}
+
+@keyframes svbm-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes svbm-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

@@ -338,10 +338,11 @@
   line-height: 34px;
 }
 
+/* Close-icon remove button */
 .svbc__delete-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   border: 1.5px solid #f0e4e4;
   background: #fff8f8;
   color: #c85a5a;
@@ -351,15 +352,16 @@
   justify-content: center;
   transition: all 0.18s;
   flex-shrink: 0;
+  padding: 0;
 }
 
 .svbc__delete-btn:hover {
   background: #ffe8e8;
   border-color: #e07070;
-  transform: scale(1.05);
+  transform: scale(1.1);
 }
 
-.svbc__delete-btn svg { width: 15px; height: 15px; }
+.svbc__delete-btn svg { width: 14px; height: 14px; }
 
 /* Empty cart */
 .svbc__empty {
@@ -661,3 +663,446 @@
   .svbc__fbt-grid { grid-template-columns: repeat(2, 1fr); }
   .svbc__content  { padding: 20px 16px; }
 }
+
+/* ============================================================
+   CHECKOUT MODAL — svbc__co__* namespace
+   ============================================================ */
+
+.svbc__co-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 26, 10, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: svbc-fade-up 0.2s ease;
+}
+
+.svbc__co-modal {
+  background: white;
+  border-radius: 20px;
+  width: 560px;
+  max-width: 96vw;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  animation: svbc-slide-r 0.25s ease;
+  overflow: hidden;
+}
+
+/* Header */
+.svbc__co-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1.5px solid #e4f0e0;
+  flex-shrink: 0;
+}
+
+.svbc__co-title {
+  font-size: 17px;
+  font-weight: 900;
+  color: #1a3a1a;
+}
+
+.svbc__co-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #e4f0e0;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7a9a7a;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.svbc__co-close:hover { border-color: #e07070; color: #c85a5a; background: #fff8f8; }
+.svbc__co-close svg { width: 13px; height: 13px; }
+
+/* Step indicator */
+.svbc__co-steps {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1.5px solid #e4f0e0;
+  flex-shrink: 0;
+  gap: 0;
+}
+
+.svbc__co-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.svbc__co-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ddeeda;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #9aaa9a;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.svbc__co-step-dot svg { width: 13px; height: 13px; }
+
+.svbc__co-step--active .svbc__co-step-dot {
+  border-color: #3cba22;
+  background: #3cba22;
+  color: white;
+}
+
+.svbc__co-step--done .svbc__co-step-dot {
+  border-color: #3cba22;
+  background: #eef7ec;
+  color: #3cba22;
+}
+
+.svbc__co-step-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9aaa9a;
+  white-space: nowrap;
+}
+
+.svbc__co-step--active .svbc__co-step-label { color: #1a3a1a; }
+.svbc__co-step--done  .svbc__co-step-label  { color: #3cba22; }
+
+.svbc__co-step-line {
+  flex: 1;
+  height: 2px;
+  background: #ddeeda;
+  margin: 0 10px;
+  transition: background 0.2s;
+}
+
+.svbc__co-step-line--done { background: #3cba22; }
+
+/* Body */
+.svbc__co-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Form fields */
+.svbc__co-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.svbc__co-form-row.svbc__co-form-row--3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.svbc__co-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.svbc__co-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #5a7a5a;
+  letter-spacing: 0.3px;
+}
+
+.svbc__co-input {
+  padding: 10px 13px;
+  border: 1.5px solid #ddeeda;
+  border-radius: 10px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1a3a1a;
+  background: #f8fdf6;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.svbc__co-input:focus {
+  border-color: #3cba22;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(60, 186, 34, 0.10);
+}
+
+.svbc__co-input--err { border-color: #e05252 !important; background: #fff8f8; }
+
+.svbc__co-err {
+  font-size: 11px;
+  color: #e05252;
+  font-weight: 600;
+}
+
+/* Payment method selector */
+.svbc__co-pay-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.svbc__co-pay-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1.5px solid #ddeeda;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a7a4a;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.svbc__co-pay-opt:hover { border-color: #3cba22; background: #f5fff3; }
+
+.svbc__co-pay-opt--active {
+  border-color: #3cba22 !important;
+  background: #eef7ec !important;
+  color: #1a3a1a !important;
+  box-shadow: 0 0 0 3px rgba(60, 186, 34, 0.10);
+}
+
+.svbc__co-pay-icon { font-size: 18px; }
+.svbc__co-pay-label { font-size: 13px; font-weight: 700; }
+
+/* Info box (COD / Net Banking) */
+.svbc__co-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f0f9ec;
+  border: 1.5px solid #c8e8c0;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2a6a14;
+  line-height: 1.5;
+}
+
+/* Confirm step */
+.svbc__co-confirm-section {
+  background: #f8fdf6;
+  border: 1.5px solid #e4f0e0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.svbc__co-confirm-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #7aaa7a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.svbc__co-confirm-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a3a1a;
+}
+
+.svbc__co-confirm-value--sub {
+  font-size: 12.5px;
+  color: #7a9a7a;
+  font-weight: 600;
+}
+
+.svbc__co-confirm-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c4a2c;
+  padding: 4px 0;
+  border-bottom: 1px solid #eaf0e8;
+}
+
+.svbc__co-confirm-item:last-child { border-bottom: none; }
+
+.svbc__co-confirm-totals {
+  background: #f8fdf6;
+  border: 1.5px solid #e4f0e0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.svbc__co-confirm-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a7a4a;
+}
+
+.svbc__co-confirm-row--total {
+  font-size: 15px;
+  font-weight: 900;
+  color: #1a3a1a;
+  border-top: 1.5px solid #ddeeda;
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* Footer */
+.svbc__co-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1.5px solid #e4f0e0;
+  flex-shrink: 0;
+}
+
+.svbc__co-back-btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1.5px solid #ddeeda;
+  background: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #5a8a5a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.svbc__co-back-btn:hover { border-color: #3cba22; color: #2a7a14; background: #f5fff3; }
+
+.svbc__co-next-btn {
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #4cd626, #3cba22);
+  font-family: 'Nunito', sans-serif;
+  font-size: 13.5px;
+  font-weight: 900;
+  color: white;
+  cursor: pointer;
+  transition: all 0.18s;
+  box-shadow: 0 3px 12px rgba(60, 185, 33, 0.35);
+}
+
+.svbc__co-next-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(60, 185, 33, 0.50);
+}
+
+/* Order placed success */
+.svbc__co-placed {
+  background: white;
+  border-radius: 20px;
+  width: 380px;
+  max-width: 94vw;
+  padding: 40px 32px 36px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.20);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: svbc-fade-up 0.3s ease;
+}
+
+.svbc__co-placed-icon { font-size: 52px; line-height: 1; }
+
+.svbc__co-placed-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #1a3a1a;
+  letter-spacing: -0.3px;
+}
+
+.svbc__co-placed-sub {
+  font-size: 13.5px;
+  color: #7a9a7a;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+/* ── Fee breakdown additions ────────────────────────── */
+.svbc__summary-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: #eef7ec;
+  color: #3cba22;
+  font-size: 10px;
+  font-weight: 800;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.svbc__summary-badge--blue {
+  background: #e8f0fb;
+  color: #3d72d4;
+}
+
+.svbc__summary-row--platform {
+  position: relative;
+}
+
+.svbc__summary-tooltip {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #9aaa9a;
+  margin-top: 1px;
+  line-height: 1.3;
+}
+
+.svbc__co-confirm-row--platform {
+  color: #3d72d4 !important;
+}
+
+/* ── Line total per cart item ───────────────────────── */
+.svbc__item-line-total {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #1a3a1a;
+  margin-top: 3px;
+}
+
+.svbc__item-line-qty {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9aaa9a;
+  margin-left: 3px;
+} 

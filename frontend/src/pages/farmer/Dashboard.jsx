@@ -189,6 +189,28 @@ const Dashboard = () => {
   // Shared orders from context — synced with Orders page
   const { orders, setOrders } = useOrders();
 
+  // Merge buyer cart orders from localStorage into context on mount, focus, and storage events
+  useEffect(() => {
+    const mergeFromStorage = () => {
+      try {
+        const fromCart = JSON.parse(localStorage.getItem("sv_farmer_orders") || "[]");
+        if (!fromCart.length) return;
+        setOrders(prev => {
+          const existingIds = new Set(prev.map(o => o.id));
+          const newEntries = fromCart.filter(o => !existingIds.has(o.id));
+          return newEntries.length ? [...newEntries, ...prev] : prev;
+        });
+      } catch {}
+    };
+    mergeFromStorage();
+    window.addEventListener("focus", mergeFromStorage);
+    window.addEventListener("storage", mergeFromStorage);
+    return () => {
+      window.removeEventListener("focus", mergeFromStorage);
+      window.removeEventListener("storage", mergeFromStorage);
+    };
+  }, [setOrders]);
+
   const [farmerName, setFarmerName] = useState(() => {
     try { const p = JSON.parse(localStorage.getItem("sv_profile")); return p?.name || p?.farmerName || "GreenFarm Organics"; } catch { return "GreenFarm Organics"; }
   });
@@ -216,20 +238,20 @@ const Dashboard = () => {
   // Period-based slicing of the shared orders
   const getOrdersForPeriod = () => {
     const extra30 = [
-      { id: "#SV-9028", customer: "Liam Chen",     initials: "LC", date: "Nov 10, 2023", total: "$74.50",  status: "processing" },
-      { id: "#SV-9029", customer: "Priya Nair",    initials: "PN", date: "Nov 08, 2023", total: "$128.00", status: "completed"  },
-      { id: "#SV-9030", customer: "Tom Nguyen",    initials: "TN", date: "Nov 06, 2023", total: "$52.20",  status: "pending"    },
-      { id: "#SV-9031", customer: "Sara Mitchell", initials: "SM", date: "Nov 04, 2023", total: "$210.75", status: "completed"  },
+      { id: "#SV-9028", customer: "Liam Chen",     initials: "LC", date: "Nov 10, 2023", total: "₹74.50",  amount: 74.50,  status: "processing" },
+      { id: "#SV-9029", customer: "Priya Nair",    initials: "PN", date: "Nov 08, 2023", total: "₹128.00", amount: 128.00, status: "completed"  },
+      { id: "#SV-9030", customer: "Tom Nguyen",    initials: "TN", date: "Nov 06, 2023", total: "₹52.20",  amount: 52.20,  status: "pending"    },
+      { id: "#SV-9031", customer: "Sara Mitchell", initials: "SM", date: "Nov 04, 2023", total: "₹210.75", amount: 210.75, status: "completed"  },
     ];
     const extra90 = [
       ...extra30,
-      { id: "#SV-9026", customer: "James Wilson", initials: "JW", date: "Oct 21, 2023", total: "$95.30",  status: "completed" },
-      { id: "#SV-9032", customer: "Rachel Kim",   initials: "RK", date: "Oct 15, 2023", total: "$183.40", status: "processing" },
+      { id: "#SV-9026", customer: "James Wilson", initials: "JW", date: "Oct 21, 2023", total: "₹95.30",  amount: 95.30,  status: "completed" },
+      { id: "#SV-9032", customer: "Rachel Kim",   initials: "RK", date: "Oct 15, 2023", total: "₹183.40", amount: 183.40, status: "processing" },
     ];
     const extraYear = [
       ...extra90,
-      { id: "#SV-9027", customer: "Emma Davis",   initials: "ED", date: "Oct 20, 2023", total: "$156.80", status: "processing" },
-      { id: "#SV-9033", customer: "David Park",   initials: "DP", date: "Sep 30, 2023", total: "$99.10",  status: "completed"  },
+      { id: "#SV-9027", customer: "Emma Davis",   initials: "ED", date: "Oct 20, 2023", total: "₹156.80", amount: 156.80, status: "processing" },
+      { id: "#SV-9033", customer: "David Park",   initials: "DP", date: "Sep 30, 2023", total: "₹99.10",  amount: 99.10,  status: "completed"  },
     ];
     const periodData = {
       "Last 7 Days":  orders.slice(0, 2),
@@ -377,18 +399,30 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Stat Cards */}
+          {/* Stat Cards — dynamic based on live orders */}
           <div className="svd__stats-grid">
-            {STATS.map((stat) => (
-              <div key={stat.id} className="svd__stat-card" style={{ "--accent-color": stat.accentColor }}>
-                <div className="svd__stat-card-top">
-                  <div className={`svd__stat-icon svd__stat-icon--${stat.iconType}`}>{stat.icon}</div>
-                  <span className={`svd__stat-badge svd__stat-badge--${stat.badgeType}`}>{stat.badge}</span>
+            {STATS.map((stat) => {
+              let value = stat.value;
+              let badge = stat.badge;
+              if (stat.id === "orders") {
+                const activeCount = orders.filter(o => o.status !== "completed" && o.status !== "cancelled").length;
+                value = String(activeCount);
+                badge = "Active";
+              } else if (stat.id === "revenue") {
+                const total = orders.reduce((sum, o) => sum + (parseFloat(o.amount) || parseFloat((o.total || "").replace(/[^0-9.]/g, "")) || 0), 0);
+                value = `₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              }
+              return (
+                <div key={stat.id} className="svd__stat-card" style={{ "--accent-color": stat.accentColor }}>
+                  <div className="svd__stat-card-top">
+                    <div className={`svd__stat-icon svd__stat-icon--${stat.iconType}`}>{stat.icon}</div>
+                    <span className={`svd__stat-badge svd__stat-badge--${stat.badgeType}`}>{badge}</span>
+                  </div>
+                  <div className="svd__stat-label">{stat.label}</div>
+                  <div className="svd__stat-value">{value}</div>
                 </div>
-                <div className="svd__stat-label">{stat.label}</div>
-                <div className="svd__stat-value">{stat.value}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Sales Chart + Inventory */}
@@ -479,9 +513,9 @@ const Dashboard = () => {
                     <td>{order.date}</td>
                     <td><strong>{order.total}</strong></td>
                     <td>
-                      <span className={`svd__status-pill svd__status-pill--${order.status}`}>
+                      <span className={`svd__status-pill svd__status-pill--${order.status || "processing"}`}>
                         <span className="svd__status-dot" />
-                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                        {(order.status || "processing").charAt(0).toUpperCase() + (order.status || "processing").slice(1)}
                       </span>
                     </td>
                     <td className="svd__action-cell">
@@ -527,9 +561,9 @@ const Dashboard = () => {
                 <div className="svd__detail-row"><strong>Total:</strong>    {selectedOrderAction.order.total}</div>
                 <div className="svd__detail-row">
                   <strong>Status:</strong>
-                  <span className={`svd__status-pill svd__status-pill--${selectedOrderAction.order.status}`}>
+                  <span className={`svd__status-pill svd__status-pill--${selectedOrderAction.order.status || "processing"}`}>
                     <span className="svd__status-dot" />
-                    {selectedOrderAction.order.status.charAt(0).toUpperCase() + selectedOrderAction.order.status.slice(1)}
+                    {((selectedOrderAction.order.status || "processing").charAt(0).toUpperCase() + (selectedOrderAction.order.status || "processing").slice(1))}
                   </span>
                 </div>
               </div>

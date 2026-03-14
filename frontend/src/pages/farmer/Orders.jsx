@@ -62,7 +62,7 @@ const BOTTOM_STATS = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────
-const fmt = (n) => `$${n.toFixed(2)}`;
+const fmt = (n) => `₹${n.toFixed(2)}`;
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // ── Action Dropdown ────────────────────────────────────────────
@@ -124,6 +124,28 @@ const Orders = () => {
   // Shared orders from context — synced with Dashboard
   const { orders, setOrders } = useOrders();
 
+  // Merge buyer cart orders from localStorage into context on mount, focus, and storage events
+  useEffect(() => {
+    const mergeFromStorage = () => {
+      try {
+        const fromCart = JSON.parse(localStorage.getItem("sv_farmer_orders") || "[]");
+        if (!fromCart.length) return;
+        setOrders(prev => {
+          const existingIds = new Set(prev.map(o => o.id));
+          const newEntries = fromCart.filter(o => !existingIds.has(o.id));
+          return newEntries.length ? [...newEntries, ...prev] : prev;
+        });
+      } catch {}
+    };
+    mergeFromStorage();
+    window.addEventListener("focus", mergeFromStorage);
+    window.addEventListener("storage", mergeFromStorage);
+    return () => {
+      window.removeEventListener("focus", mergeFromStorage);
+      window.removeEventListener("storage", mergeFromStorage);
+    };
+  }, [setOrders]);
+
   const [farmerName, setFarmerName] = useState(() => {
     try { const p = JSON.parse(localStorage.getItem("sv_profile")); return p?.name || p?.farmerName || "GreenFarm Organics"; } catch { return "GreenFarm Organics"; }
   });
@@ -174,7 +196,7 @@ const Orders = () => {
       o.id,
       o.customer,
       o.items || "",
-      o.amount != null ? `$${o.amount.toFixed(2)}` : (o.total || ""),
+      o.amount != null ? `₹${o.amount.toFixed(2)}` : (o.total || ""),
       o.status,
       o.date,
     ]);
@@ -334,8 +356,8 @@ const Orders = () => {
                       <td><span className="svo__items-text">{order.items || "—"}</span></td>
                       <td><span className="svo__amount">{order.amount != null ? fmt(order.amount) : (order.total || "—")}</span></td>
                       <td>
-                        <span className={`svo__status-badge svo__status-badge--${order.status}`}>
-                          {cap(order.status)}
+                        <span className={`svo__status-badge svo__status-badge--${order.status || "processing"}`}>
+                          {cap(order.status || "processing")}
                         </span>
                       </td>
                       <td><span className="svo__date-text">{order.date}</span></td>
