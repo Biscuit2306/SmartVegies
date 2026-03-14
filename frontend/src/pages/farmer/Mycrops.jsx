@@ -29,6 +29,7 @@ const INITIAL_CROPS = [
     emoji: "🥕",
     status: "growing",
     quantity: "120 kg",
+    price: 0,
     field: "Field A",
     planted: "Sep 10, 2023",
     harvest: "Nov 20, 2023",
@@ -42,6 +43,7 @@ const INITIAL_CROPS = [
     emoji: "🥬",
     status: "issue",
     quantity: "45 kg",
+    price: 0,
     field: "Field B",
     planted: "Oct 01, 2023",
     harvest: "Nov 05, 2023",
@@ -55,6 +57,7 @@ const INITIAL_CROPS = [
     emoji: "🥦",
     status: "growing",
     quantity: "80 kg",
+    price: 0,
     field: "Field C",
     planted: "Sep 20, 2023",
     harvest: "Dec 01, 2023",
@@ -68,6 +71,7 @@ const INITIAL_CROPS = [
     emoji: "🍅",
     status: "harvested",
     quantity: "200 kg",
+    price: 0,
     field: "Field A",
     planted: "Jul 15, 2023",
     harvest: "Oct 10, 2023",
@@ -81,6 +85,7 @@ const INITIAL_CROPS = [
     emoji: "🧅",
     status: "seedling",
     quantity: "60 kg",
+    price: 0,
     field: "Field D",
     planted: "Oct 18, 2023",
     harvest: "Jan 15, 2024",
@@ -94,6 +99,7 @@ const INITIAL_CROPS = [
     emoji: "🌽",
     status: "growing",
     quantity: "150 kg",
+    price: 0,
     field: "Field B",
     planted: "Aug 30, 2023",
     harvest: "Nov 28, 2023",
@@ -130,8 +136,8 @@ const fromDateInput = (str) => {
 const AddCropModal = ({ onClose, onAdd }) => {
   const [form, setForm] = useState({
     name: "", variety: "", emoji: "🌿",
-    field: "", quantity: "", planted: "",
-    harvest: "", category: "", status: "seedling",
+    field: "", quantity: "", price: "",
+    planted: "", harvest: "", category: "", status: "seedling",
   });
 
   const handle = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -142,6 +148,7 @@ const AddCropModal = ({ onClose, onAdd }) => {
       ...form,
       id: Date.now(),
       progress: 5,
+      price: parseFloat(form.price) || 0,
       planted: fromDateInput(form.planted) || form.planted,
       harvest: fromDateInput(form.harvest) || form.harvest,
     });
@@ -189,6 +196,19 @@ const AddCropModal = ({ onClose, onAdd }) => {
 
           <div className="svc__form-row">
             <div className="svc__form-group">
+              <label className="svc__form-label">Price per kg (₹)</label>
+              <input className="svc__form-input" name="price" value={form.price}
+                placeholder="e.g. 3.50" type="number" min="0" step="0.01" onChange={handle} />
+            </div>
+            <div className="svc__form-group">
+              <label className="svc__form-label">Category</label>
+              <input className="svc__form-input" name="category" value={form.category}
+                placeholder="e.g. Leafy Greens" onChange={handle} />
+            </div>
+          </div>
+
+          <div className="svc__form-row">
+            <div className="svc__form-group">
               <label className="svc__form-label">Planted Date</label>
               <input className="svc__form-input" name="planted" type="date"
                 value={form.planted} onChange={handle} />
@@ -201,11 +221,6 @@ const AddCropModal = ({ onClose, onAdd }) => {
           </div>
 
           <div className="svc__form-row">
-            <div className="svc__form-group">
-              <label className="svc__form-label">Category</label>
-              <input className="svc__form-input" name="category" value={form.category}
-                placeholder="e.g. Leafy Greens" onChange={handle} />
-            </div>
             <div className="svc__form-group">
               <label className="svc__form-label">Status</label>
               <select className="svc__form-select" name="status" value={form.status} onChange={handle}>
@@ -240,6 +255,7 @@ const EditCropModal = ({ crop, onClose, onSave }) => {
     emoji:    crop.emoji || "🌿",
     field:    crop.field,
     quantity: crop.quantity,
+    price:    crop.price ?? 0,
     planted:  toDateInput(crop.planted),
     harvest:  toDateInput(crop.harvest),
     category: crop.category,
@@ -254,9 +270,10 @@ const EditCropModal = ({ crop, onClose, onSave }) => {
     onSave({
       ...crop,
       ...form,
+      price:    parseFloat(form.price) || 0,
       progress: parseInt(form.progress, 10) || 0,
-      planted: fromDateInput(form.planted) || form.planted,
-      harvest: fromDateInput(form.harvest) || form.harvest,
+      planted:  fromDateInput(form.planted) || form.planted,
+      harvest:  fromDateInput(form.harvest) || form.harvest,
     });
     onClose();
   };
@@ -298,6 +315,18 @@ const EditCropModal = ({ crop, onClose, onSave }) => {
 
           <div className="svc__form-row">
             <div className="svc__form-group">
+              <label className="svc__form-label">Price per kg (₹)</label>
+              <input className="svc__form-input" name="price" value={form.price}
+                type="number" min="0" step="0.01" onChange={handle} />
+            </div>
+            <div className="svc__form-group">
+              <label className="svc__form-label">Category</label>
+              <input className="svc__form-input" name="category" value={form.category} onChange={handle} />
+            </div>
+          </div>
+
+          <div className="svc__form-row">
+            <div className="svc__form-group">
               <label className="svc__form-label">Planted Date</label>
               <input className="svc__form-input" name="planted" type="date" value={form.planted} onChange={handle} />
             </div>
@@ -309,10 +338,6 @@ const EditCropModal = ({ crop, onClose, onSave }) => {
 
           <div className="svc__form-row">
             <div className="svc__form-group">
-              <label className="svc__form-label">Category</label>
-              <input className="svc__form-input" name="category" value={form.category} onChange={handle} />
-            </div>
-            <div className="svc__form-group">
               <label className="svc__form-label">Status</label>
               <select className="svc__form-select" name="status" value={form.status} onChange={handle}>
                 <option value="seedling">Seedling</option>
@@ -321,23 +346,22 @@ const EditCropModal = ({ crop, onClose, onSave }) => {
                 <option value="issue">Issue</option>
               </select>
             </div>
-          </div>
-
-          <div className="svc__form-group">
-            <label className="svc__form-label">Growth Progress ({form.progress}%)</label>
-            <input
-              className="svc__form-input svc__form-input--range"
-              name="progress"
-              type="range"
-              min="0"
-              max="100"
-              value={form.progress}
-              onChange={handle}
-            />
-            <div className="svc__progress-range-labels">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
+            <div className="svc__form-group">
+              <label className="svc__form-label">Growth Progress ({form.progress}%)</label>
+              <input
+                className="svc__form-input svc__form-input--range"
+                name="progress"
+                type="range"
+                min="0"
+                max="100"
+                value={form.progress}
+                onChange={handle}
+              />
+              <div className="svc__progress-range-labels">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -390,6 +414,12 @@ const ViewCropModal = ({ crop, onClose }) => (
         <div className="svc__view-detail-item">
           <div className="svc__view-detail-label">Quantity</div>
           <div className="svc__view-detail-value">{crop.quantity || "—"}</div>
+        </div>
+        <div className="svc__view-detail-item">
+          <div className="svc__view-detail-label">Price per kg</div>
+          <div className="svc__view-detail-value">
+            {crop.price != null && crop.price > 0 ? `₹${parseFloat(crop.price).toFixed(2)}` : "—"}
+          </div>
         </div>
         <div className="svc__view-detail-item">
           <div className="svc__view-detail-label">Category</div>
@@ -483,6 +513,12 @@ const CropCard = ({ crop, onDelete, onEdit, onView }) => (
           <div className="svc__crop-meta-value">{crop.quantity}</div>
         </div>
         <div className="svc__crop-meta-item">
+          <div className="svc__crop-meta-label">Price</div>
+          <div className="svc__crop-meta-value">
+            {crop.price > 0 ? `₹${parseFloat(crop.price).toFixed(2)}` : "—"}
+          </div>
+        </div>
+        <div className="svc__crop-meta-item">
           <div className="svc__crop-meta-label">Field</div>
           <div className="svc__crop-meta-value">{crop.field}</div>
         </div>
@@ -559,7 +595,6 @@ const MyCrops = () => {
   const [showModal, setModal]     = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Modal state for Edit / View / Remove
   const [editCrop,   setEditCrop]   = useState(null);
   const [viewCrop,   setViewCrop]   = useState(null);
   const [removeCrop, setRemoveCrop] = useState(null);
@@ -583,12 +618,12 @@ const MyCrops = () => {
   const handleDelete = (id)   => setCrops((prev) => prev.filter((c) => c.id !== id));
   const handleSave   = (updated) => setCrops((prev) => prev.map((c) => c.id === updated.id ? updated : c));
 
-  // Export CSV
   const handleExport = () => {
-    const headers = ["Name", "Variety", "Status", "Quantity", "Field", "Category", "Planted", "Harvest", "Progress"];
+    const headers = ["Name", "Variety", "Status", "Quantity", "Price", "Field", "Category", "Planted", "Harvest", "Progress"];
     const rows = crops.map((c) => [
-      c.name, c.variety, c.status, c.quantity, c.field,
-      c.category, c.planted, c.harvest, `${c.progress}%`,
+      c.name, c.variety, c.status, c.quantity,
+      c.price > 0 ? `₹${parseFloat(c.price).toFixed(2)}` : "—",
+      c.field, c.category, c.planted, c.harvest, `${c.progress}%`,
     ]);
     const csv = [headers, ...rows]
       .map((row) => row.map((v) => `"${(v || "").toString().replace(/"/g, '""')}"`).join(","))
@@ -607,7 +642,6 @@ const MyCrops = () => {
       <Sidebar activePage="My Crops" />
 
       <div className="svc__main">
-        {/* Top Bar */}
         <header className="svc__topbar">
           <div className="svc__search-wrap">
             <svg className="svc__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -656,7 +690,6 @@ const MyCrops = () => {
         </header>
 
         <main className="svc__content">
-          {/* Page Header */}
           <div className="svc__header">
             <div className="svc__header-text">
               <h1>My Crops</h1>
@@ -680,7 +713,6 @@ const MyCrops = () => {
             </div>
           </div>
 
-          {/* Summary Stats */}
           <div className="svc__summary-row">
             {SUMMARY_STATS.map((s) => (
               <div key={s.label} className="svc__summary-card">
@@ -693,7 +725,6 @@ const MyCrops = () => {
             ))}
           </div>
 
-          {/* Controls — view toggle removed */}
           <div className="svc__controls">
             <div className="svc__filter-tabs">
               {FILTER_TABS.map((tab) => (
@@ -719,7 +750,6 @@ const MyCrops = () => {
             </div>
           </div>
 
-          {/* Crops Grid */}
           {filtered.length === 0 ? (
             <div className="svc__empty">
               <div className="svc__empty-icon">🌾</div>
@@ -742,34 +772,10 @@ const MyCrops = () => {
         </main>
       </div>
 
-      {/* Add Crop Modal */}
       {showModal && <AddCropModal onClose={() => setModal(false)} onAdd={handleAdd} />}
-
-      {/* Edit Crop Modal */}
-      {editCrop && (
-        <EditCropModal
-          crop={editCrop}
-          onClose={() => setEditCrop(null)}
-          onSave={handleSave}
-        />
-      )}
-
-      {/* View Crop Modal */}
-      {viewCrop && (
-        <ViewCropModal
-          crop={viewCrop}
-          onClose={() => setViewCrop(null)}
-        />
-      )}
-
-      {/* Confirm Remove Modal */}
-      {removeCrop && (
-        <ConfirmRemoveModal
-          crop={removeCrop}
-          onClose={() => setRemoveCrop(null)}
-          onConfirm={handleDelete}
-        />
-      )}
+      {editCrop  && <EditCropModal crop={editCrop} onClose={() => setEditCrop(null)} onSave={handleSave} />}
+      {viewCrop  && <ViewCropModal crop={viewCrop} onClose={() => setViewCrop(null)} />}
+      {removeCrop && <ConfirmRemoveModal crop={removeCrop} onClose={() => setRemoveCrop(null)} onConfirm={handleDelete} />}
     </div>
   );
 };
